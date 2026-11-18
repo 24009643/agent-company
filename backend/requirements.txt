@@ -1,0 +1,16 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+chromadb>=0.5
+httpx>=0.27
+pypdf>=4.0
+python-docx>=1.1
+python-multipart>=0.0.9
+pydantic>=2.6
+
+# Advanced search (hybrid retrieval + RRF rerank, fully local)
+jieba>=0.42
+rank-bm25>=0.2
+
+# OCR(扫描件/图片/图片型 PDF,全本地)——README 宣传的功能,依赖此前漏列,全新安装会变纸面功能
+rapidocr-onnxruntime>=1.3
+pymupdf>=1.24

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+backend/data/
+.env
+.superpowers/
+.DS_Store

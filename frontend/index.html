@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>知识库 AI Agent</title>
+<style>
+  :root{ --navy:#15233B; --teal:#0E8388; --tealD:#0B6A6A; --cloud:#EAF2F4; --ink:#1E293B; --slate:#64748B; --line:#E5EBEC; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; height:100%; }
+  body{ font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif; color:var(--ink); font-size:13px; background:#F4F7F8; }
+  button{ font-family:inherit; cursor:pointer; }
+  textarea,input,select{ font-family:inherit; }
+  .app{ display:flex; height:100vh; }
+  .sidebar{ width:224px; flex-shrink:0; background:var(--navy); display:flex; flex-direction:column; }
+  .brand{ padding:18px 20px; display:flex; align-items:center; gap:8px; border-bottom:1px solid rgba(255,255,255,.08); }
+  .brand .logo{ width:32px; height:32px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; }
+  .brand .t1{ color:#fff; font-weight:700; font-size:14px; }
+  .brand .t2{ color:#8FB3B3; font-size:10px; }
+  .nav{ flex:1; padding:14px 12px; display:flex; flex-direction:column; gap:4px; overflow:auto; }
+  .nav button{ display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:8px; border:none; background:transparent; color:#C3D0D0; font-size:14px; text-align:left; }
+  .nav button.active{ background:var(--teal); color:#fff; }
+  .uinfo{ padding:14px 12px; border-top:1px solid rgba(255,255,255,.08); }
+  .uinfo .lic{ font-size:10px; color:#8FB3B3; margin:0 4px 8px; line-height:1.5; }
+  .uinfo .lic b{ color:#CFE0E0; }
+  .ubar{ display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; background:#1E3050; }
+  .ubar .av{ width:26px; height:26px; border-radius:50%; background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .ubar .nm{ color:#fff; font-size:12px; line-height:1.3; flex:1; min-width:0; }
+  .ubar .nm small{ color:#8FB3B3; }
+  .ubar .lo{ background:none; border:none; color:#8FB3B3; }
+  .main{ flex:1; display:flex; flex-direction:column; min-width:0; }
+  .header{ display:flex; align-items:center; justify-content:space-between; padding:16px 28px; background:#fff; border-bottom:1px solid var(--line); }
+  .header .h1{ font-weight:700; font-size:16px; color:var(--navy); }
+  .header .h2{ font-size:12px; color:var(--slate); }
+  .badge{ display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:600; background:var(--cloud); color:var(--tealD); }
+  .warn{ padding:8px 28px; font-size:12px; background:#FFF4E0; color:#8A5A00; }
+  .err{ padding:8px 28px; font-size:12px; background:#FDECEC; color:#A23B3B; }
+  .content{ flex:1; overflow:auto; }
+  .pad{ padding:24px 28px; }
+  .grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+  .grid4{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .card{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; }
+  .stat .l{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--slate); margin-bottom:8px; }
+  .stat .v{ font-weight:700; color:var(--navy); }
+  .sectitle{ font-weight:700; font-size:14px; color:var(--navy); }
+  .muted{ color:var(--slate); }
+  .sq{ text-align:left; width:100%; padding:12px 16px; border-radius:8px; background:#F7FAFA; border:1px solid var(--line); color:var(--ink); display:flex; align-items:center; justify-content:space-between; font-size:14px; margin-top:8px; }
+  .sq .l{ display:flex; align-items:center; gap:8px; }
+  .tag{ padding:2px 6px; border-radius:5px; font-size:10px; background:var(--cloud); color:var(--tealD); }
+  .tag.red{ background:#FDECEC; color:#A23B3B; }
+  .doc{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:12px; }
+  .doc .top{ display:flex; align-items:flex-start; justify-content:space-between; }
+  .doc .title{ display:flex; align-items:center; gap:8px; font-weight:500; font-size:14px; color:var(--navy); flex-wrap:wrap; }
+  .talent-row{ transition:box-shadow .14s ease, border-color .14s ease, background .14s ease; }
+  .talent-row:hover{ box-shadow:0 2px 10px rgba(14,131,136,.08); border-color:var(--teal); background:#FAFDFD; }
+  @media (prefers-reduced-motion: reduce){ .talent-row{ transition:none; } }
+  .rowchips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .rowchips .tag{ font-size:11px; padding:2px 9px; background:#F2F7F7; color:var(--slate); }
+  .form{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .form input,.form select,.form textarea{ padding:8px 12px; border-radius:8px; border:1px solid #D6E0E1; font-size:14px; outline:none; }
+  .form textarea{ resize:none; }
+  .btn{ display:flex; align-items:center; justify-content:center; gap:6px; padding:8px; border-radius:8px; font-size:14px; font-weight:500; border:none; }
+  .btn-primary{ background:var(--teal); color:#fff; }
+  .btn-primary:disabled{ background:#9DBDBD; }
+  .btn-ghost{ background:#fff; border:1px solid #D6E0E1; color:var(--tealD); }
+  .iconbtn{ background:none; border:none; color:#B9434B; }
+  .chat{ display:flex; flex-direction:column; height:100%; }
+  .msgs{ flex:1; overflow:auto; padding:24px 28px; }
+  .empty{ height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  .empty .ic{ width:56px; height:56px; border-radius:16px; background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-width:520px; margin-top:20px; }
+  .chip{ padding:6px 12px; border-radius:999px; font-size:12px; background:#fff; border:1px solid #DCE6E7; color:var(--tealD); }
+  .row-user{ display:flex; justify-content:flex-end; margin-bottom:20px; }
+  .bub-user{ max-width:78%; background:var(--teal); color:#fff; border-radius:16px; border-top-right-radius:4px; padding:10px 16px; font-size:14px; white-space:pre-wrap; }
+  .row-ai{ display:flex; gap:12px; margin-bottom:20px; }
+  .ai-ic{ flex-shrink:0; width:32px; height:32px; border-radius:50%; background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:center; }
+  .ai-body{ max-width:80%; }
+  .bub-ai{ background:#fff; border:1px solid #E2E8E9; border-radius:16px; border-top-left-radius:4px; padding:12px 16px; font-size:14px; line-height:1.6; white-space:pre-wrap; }
+  .srctoggle{ display:flex; align-items:center; gap:4px; font-size:12px; font-weight:500; color:var(--tealD); background:none; border:none; padding:0; margin-top:8px; }
+  .src{ border:1px solid #DCE6E7; border-radius:8px; overflow:hidden; margin-top:8px; }
+  .src .h{ width:100%; display:flex; align-items:center; justify-content:space-between; padding:8px 12px; font-size:12px; background:var(--cloud); border:none; color:var(--navy); }
+  .src .h .l{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .src .num{ display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:4px; font-size:10px; font-weight:700; background:var(--teal); color:#fff; }
+  .src .body{ padding:8px 12px; font-size:12px; line-height:1.6; }
+  .fb{ display:flex; align-items:center; gap:8px; margin-top:6px; font-size:12px; color:var(--slate); }
+  .fb button{ background:none; border:none; font-size:14px; }
+  .loadbub{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #E2E8E9; border-radius:16px; border-top-left-radius:4px; padding:12px 16px; font-size:14px; color:var(--slate); }
+  .spin{ width:14px; height:14px; border:2px solid #cbd5d8; border-top-color:var(--teal); border-radius:50%; animation:spin .9s linear infinite; display:inline-block; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  /* 阶段D 统一长文展开(ExpandableText) */
+  .exbody{ white-space:pre-wrap; font-size:12px; line-height:1.7; background:#F7FAFA; border:1px solid var(--line); border-radius:8px; padding:12px; position:relative; overflow:hidden; }
+  .exbody.clip{ max-height:var(--exh,160px); }
+  .exbody.clip::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:34px; background:linear-gradient(rgba(247,250,250,0), #F7FAFA); }
+  @media (prefers-reduced-motion: no-preference){ .exbody{ transition:max-height .15s ease; } }
+  /* 阶段D 危险操作二次确认弹窗 */
+  .dlg-ov{ position:fixed; inset:0; background:rgba(20,32,38,.45); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .dlg{ background:#fff; border-radius:14px; padding:20px 22px; width:min(88vw,384px); box-shadow:0 14px 44px rgba(0,0,0,.28); }
+  .dlg-msg{ font-size:14px; color:var(--slate); line-height:1.65; margin-bottom:18px; }
+  .dlg-act{ display:flex; gap:10px; justify-content:flex-end; }
+  .chatinput{ padding:16px 28px; background:#fff; border-top:1px solid var(--line); }
+  .modelbar{ display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:12px; color:var(--slate); }
+  .modelbar select{ padding:5px 10px; border-radius:8px; border:1px solid #D6E0E1; font-size:13px; color:var(--navy); background:#fff; outline:none; }
+  .modelhint{ font-size:11px; color:#9AA7B2; }
+  .modeltag{ display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--tealD); background:var(--cloud); padding:2px 8px; border-radius:999px; margin-top:8px; }
+  .inbox{ display:flex; align-items:flex-end; gap:8px; border:1px solid #D6E0E1; border-radius:12px; padding:8px 12px; }
+  .inbox textarea{ flex:1; border:none; outline:none; resize:none; background:transparent; font-size:14px; padding:4px 0; max-height:96px; }
+  .sendbtn{ flex-shrink:0; width:36px; height:36px; border-radius:8px; border:none; background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:center; }
+  .sendbtn:disabled{ background:#9DBDBD; }
+  .searchbar{ display:flex; gap:8px; max-width:640px; margin-bottom:20px; }
+  .searchbar input{ flex:1; padding:10px 16px; border-radius:8px; border:1px solid #D6E0E1; font-size:14px; outline:none; background:#fff; }
+  .hit{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:8px; max-width:640px; }
+  .hit .h{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--navy); margin-bottom:6px; }
+  mark{ background:#FFE9A8; padding:0 1px; }
+  .empty-box{ font-size:12px; color:var(--slate); padding:32px 16px; text-align:center; border-radius:12px; background:#fff; border:1px dashed #D6E0E1; }
+  /* table */
+  table.ut{ width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  table.ut th,table.ut td{ text-align:left; padding:10px 14px; font-size:13px; border-bottom:1px solid var(--line); }
+  table.ut th{ background:#F7FAFA; color:var(--slate); font-weight:600; font-size:12px; }
+  /* bar chart */
+  .barchart{ display:flex; align-items:flex-end; gap:5px; height:150px; padding-top:8px; }
+  .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; }
+  .bar{ width:70%; background:var(--teal); border-radius:3px 3px 0 0; min-height:2px; }
+  .bar-x{ font-size:9px; color:var(--slate); margin-top:4px; }
+  /* finance workbench */
+  .fw .r{ margin-bottom:8px; }
+  .fw .g{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+  .fw .g3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px; }
+  .fw label{ font-size:12px; color:var(--slate); display:block; margin-bottom:3px; }
+  .fw input{ width:100%; padding:8px 10px; border-radius:8px; border:1px solid #D6E0E1; font-size:14px; outline:none; }
+  .kv{ display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .kv b{ color:var(--navy); }
+  .kv.total{ border-bottom:none; margin-top:6px; padding-top:8px; border-top:2px solid var(--cloud); font-size:15px; }
+  /* login */
+  .login-wrap{ height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#15233B,#0E8388); }
+  .login{ background:#fff; border-radius:16px; padding:32px; width:360px; box-shadow:0 20px 50px rgba(0,0,0,.25); }
+  .login .lg{ width:48px; height:48px; border-radius:12px; background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+  .login h1{ font-size:20px; color:var(--navy); margin:0 0 2px; }
+  .login p.sub{ font-size:12px; color:var(--slate); margin:0 0 20px; }
+  .login label{ font-size:12px; color:var(--slate); display:block; margin:12px 0 5px; }
+  .login input{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D6E0E1; font-size:14px; outline:none; }
+  .login .lbtn{ width:100%; margin-top:20px; padding:11px; border-radius:8px; border:none; background:var(--teal); color:#fff; font-size:15px; font-weight:600; }
+  .login .lbtn:disabled{ background:#9DBDBD; }
+  .login .demo{ margin-top:18px; padding:10px 12px; border-radius:8px; background:#F4F7F8; font-size:11px; color:var(--slate); line-height:1.7; }
+  .login .lerr{ margin-top:12px; font-size:12px; color:#A23B3B; min-height:14px; }
+  ::-webkit-scrollbar{ width:8px; height:8px; } ::-webkit-scrollbar-thumb{ background:#cbd5d8; border-radius:8px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+"use strict";
+var DEPTS=["全员","人事","财务","技术","销售"];
+var SAMPLE_Q=["请假和年假是怎么规定的?","出差住宿每晚能报销多少?","新员工第一天要做什么?","产品支持私有化部署吗?","公司年会在哪里举办?"];
+
+function S(inner,sz){ sz=sz||18; return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>'; }
+var IC={
+  db:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+  home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+  chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  send:'<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  spark:'<path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/>',
+  down:'<polyline points="6 9 12 15 18 9"/>', right:'<polyline points="9 18 15 12 9 6"/>',
+  info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  award:'<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
+  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>'
+};
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+var token = localStorage.getItem("kb_token") || "";
+var state={ view:"home", user:null, license:null, roleNames:{}, userDepts:null, docs:[], stats:{documents:0,chunks:0},
+  messages:[], convId:null, loading:false, search:null, err:"", expanded:{}, busy:false, pending:{}, phase:{}, users:null, analytics:null,
+  models:[], modelId:"", chatPrefill:"",
+  talentRows:[], talentStatuses:["草稿","待筛","约面","已面","评估","offer","淘汰"],
+  talentFilters:{status:"",min_years:"",skill:"",education:""}, talentSelected:null, talentConfirm:null,
+  talentCompare:[], talentBusy:false, talentMsg:"", jdGap:null, evaluation:null, commDraft:null, interviewQs:null,
+  jobs:[], jobBusy:false, jobMsg:"", jdJobId:"", rubricJobId:"", rubricDraft:null, rubricBusy:false, rubricMsg:"", jobQueueId:"", jobQueue:null, matrixJobId:"", matrix:null,
+  selectedJobId:"", jobTab:"overview", hiringFocus:"", capabilityPool:null,
+  sendForm:false, sendBatch:null, sendBusy:false };
+// LLM 动作统一在途守卫:同键进行中忽略后续点击(防重),状态驱动载入态扛重渲染。
+function pend(k){ return !!(state.pending&&state.pending[k]); }
+// 阶段B 分阶段载入文案:评分/拆解按阶段切词(状态驱动,扛重渲染);尊重 prefers-reduced-motion。
+var LLM_STAGES={ eval:["取证中","计分中"], aidraft:["理解 JD","生成候选"] };
+var REDUCE_MOTION=!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+var STAGE_MS=4000; // 单次调用约 5–30s,~4s 后从阶段0推进到阶段1
+function stageLabel(k){ var s=LLM_STAGES[String(k).split(":")[0]]; if(!s) return null; var i=(state.phase&&state.phase[k])||0; return s[Math.min(i,s.length-1)]; }
+function loadLabel(k,fallback){ return '<span class="spin"></span> '+esc(stageLabel(k)||fallback)+'…'; }
+// reduced-motion:不切词,停在阶段0(静态首阶段文案)。
+function scheduleStages(k){ var s=LLM_STAGES[String(k).split(":")[0]]; if(!s||REDUCE_MOTION) return []; var ids=[]; for(var i=1;i<s.length;i++){ (function(idx){ ids.push(setTimeout(function(){ if(state.phase&&state.pending&&state.pending[k]){ state.phase[k]=idx; paintTalent(); } }, idx*STAGE_MS)); })(i); } return ids; }
+async function runLLM(k, fn){
+  if(!state.pending) state.pending={};
+  if(state.pending[k]) return;
+  state.pending[k]=true; if(!state.phase) state.phase={}; state.phase[k]=0;
+  var timers=scheduleStages(k); paintTalent();
+  try{ await fn(); }
+  catch(e){ state.err=e.message; renderShell(); }
+  finally{ timers.forEach(clearTimeout); delete state.pending[k]; if(state.phase) delete state.phase[k]; paintTalent(); }
+}
+
+// 阶段D 统一长文展开:折叠到 collapsedPx,超出才给「展开全文/收起」;状态存 state.expanded[key](paintTalent 重渲染保持)。
+function expandable(key, text, collapsedPx){
+  var t=String(text==null?"":text), cp=collapsedPx||160;
+  // 短文不夹(约按折叠高度折算字符量,免出现点了没反应的空展开按钮)。
+  if(t.length <= Math.round(cp/20)*28) return '<div class="exbody" style="max-height:none">'+esc(t)+'</div>';
+  var open=!!(state.expanded&&state.expanded[key]);
+  return '<div class="exbody'+(open?'':' clip')+'" style="--exh:'+cp+'px">'+esc(t)+'</div>'
+    +'<button class="btn btn-ghost" data-extoggle="'+esc(key)+'" style="width:auto;padding:2px 10px;font-size:12px;margin-top:6px">'+(open?'收起':'展开全文')+'</button>';
+}
+// 阶段D 危险操作二次确认:统一样式弹窗替代原生 confirm;点遮罩/取消/Esc 关闭,确认才执行 onOk。
+function confirmDanger(msg, onOk){
+  var ov=document.createElement("div"); ov.className="dlg-ov";
+  ov.innerHTML='<div class="dlg" role="alertdialog" aria-modal="true"><div class="dlg-msg">'+esc(msg)+'</div>'
+    +'<div class="dlg-act"><button class="btn btn-ghost" data-dlg="no" style="width:auto;padding:7px 16px">取消</button>'
+    +'<button class="btn" data-dlg="yes" style="width:auto;padding:7px 16px;background:#A23B3B;color:#fff;border-color:#A23B3B">确认</button></div></div>';
+  function close(){ ov.remove(); document.removeEventListener("keydown", onKey); }
+  function onKey(e){ if(e.key==="Escape") close(); }
+  ov.addEventListener("click", function(e){ if(e.target===ov || e.target.getAttribute("data-dlg")==="no") close(); });
+  ov.querySelector('[data-dlg="yes"]').addEventListener("click", function(){ close(); onOk(); });
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(ov);
+}
+
+async function api(path,opts){
+  opts=opts||{}; opts.headers=Object.assign({}, opts.headers||{}, token?{Authorization:"Bearer "+token}:{});
+  var r=await fetch(path,opts);
+  if(r.status===401){ doLogout(true); throw new Error("401"); }
+  if(!r.ok){ var msg="HTTP "+r.status; try{ var j=await r.json(); if(j.detail) msg=j.detail; }catch(e){} throw new Error(msg); }
+  return await r.json();
+}
+function isAdmin(){ return state.user && state.user.role==="admin"; }
+function isHr(){ return state.user && (state.user.role==="hr" || state.user.role==="hr_rubric_editor"); }  // 人才库仅 HR 内容角色可见(I7)
+function isRubricEditor(){ return state.user && state.user.role==="hr_rubric_editor"; }
+function canSeeDept(d){ return state.userDepts==null || state.userDepts.indexOf(d)>=0; } // null=admin 全可见
+function sampleQs(){ return canSeeDept("财务")
+  ? ["帮我算成都出差3晚3天的差旅预算","上海住一晚750元超标了吗?","出差住宿每晚能报销多少?","请假和年假是怎么规定的?","公司年会在哪里举办?"]
+  : SAMPLE_Q; }
+function feat(name){ return state.license && state.license.features && state.license.features[name]; }
+function setModels(m){
+  state.models = m.models || [];
+  var saved = localStorage.getItem("kb_model");
+  var ids = state.models.map(function(x){ return x.id; });
+  state.modelId = (saved && ids.indexOf(saved)>=0) ? saved : (m.default_model || (state.models[0] && state.models[0].id) || "");
+}
+function modelLabel(id){ for(var i=0;i<state.models.length;i++){ if(state.models[i].id===id) return state.models[i].name; } return id; }
+
+/* ---------- 启动 / 登录 ---------- */
+async function boot(){
+  if(token){
+    try{ var m=await api("/api/me"); state.user=m.user; state.license=m.license; state.roleNames=m.roles||{}; state.userDepts=m.depts; setModels(m); await refresh(); return; }
+    catch(e){ token=""; localStorage.removeItem("kb_token"); }
+  }
+  showLogin();
+}
+function showLogin(msg){
+  document.getElementById("root").innerHTML=''
+    +'<div class="login-wrap"><div class="login">'
+    +'<div class="lg">'+S(IC.db,24)+'</div>'
+    +'<h1>知识库 AI</h1><p class="sub">私有化企业知识库 · 请登录</p>'
+    +'<label>用户名</label><input id="lu" autocomplete="username" />'
+    +'<label>密码</label><input id="lp" type="password" autocomplete="current-password" />'
+    +'<button class="lbtn" id="lbtn">登 录</button>'
+    +'<div class="lerr" id="lerr">'+(msg?esc(msg):"")+'</div>'
+    +'<div class="demo"><b>演示账号</b>(可换不同身份看权限隔离):<br>管理员 admin / admin123<br>财务 finance / finance123<br>人事 hr / hr123<br>人事评分配置 hr_editor / hreditor123<br>普通员工 staff / staff123</div>'
+    +'</div></div>';
+  var u=document.getElementById("lu"), p=document.getElementById("lp"), b=document.getElementById("lbtn");
+  function go(){ doLogin(u.value.trim(), p.value); }
+  b.onclick=go; p.onkeydown=function(e){ if(e.key==="Enter") go(); };
+  u.focus();
+}
+async function doLogin(username,password){
+  if(!username||!password){ document.getElementById("lerr").textContent="请输入用户名和密码"; return; }
+  var b=document.getElementById("lbtn"); b.disabled=true; b.textContent="登录中…";
+  try{
+    var r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:username,password:password})});
+    if(!r.ok){ var j=await r.json().catch(function(){return{};}); throw new Error(j.detail||("HTTP "+r.status)); }
+    var d=await r.json(); token=d.token; localStorage.setItem("kb_token",token);
+    var m=await api("/api/me"); state.user=m.user; state.license=m.license; state.roleNames=m.roles||{}; state.userDepts=m.depts; setModels(m); state.view="home"; state.messages=[];
+    await refresh();
+  }catch(e){ var el=document.getElementById("lerr"); if(el) el.textContent=e.message; var bb=document.getElementById("lbtn"); if(bb){bb.disabled=false;bb.textContent="登 录";} }
+}
+async function doLogout(silent){
+  try{ if(!silent) await api("/api/logout",{method:"POST"}); }catch(e){}
+  token=""; localStorage.removeItem("kb_token"); state.user=null;
+  showLogin(silent?"登录已失效,请重新登录":null);
+}
+
+async function refresh(){
+  try{
+    var d=await api("/api/documents"); var s=await api("/api/stats");
+    state.docs=d; state.stats=s; state.err="";
+  }catch(e){ if(e.message!=="401") state.err="无法连接后端或加载失败:"+e.message; }
+  renderShell();
+}
+
+/* ---------- 应用外壳 ---------- */
+function renderShell(){
+  if(!state.user){ showLogin(); return; }
+  var nav=[["home","首页",IC.home],["docs","文档管理",IC.file],["chat","AI 问答",IC.chat],["search","全文检索",IC.search]];
+  if(canSeeDept("财务")) nav.push(["finance","财务工作台",IC.wallet]);
+  if(isHr()) nav.push(["talent","人才库",IC.users]);
+  if(isAdmin()) nav.push(["users","用户管理",IC.users]);
+  if(isAdmin() && feat("analytics")) nav.push(["analytics","数据分析",IC.chart]);
+  if(!nav.some(function(n){return n[0]===state.view;})) state.view="home";
+  var lic=state.license||{};
+  var titles={home:["概览","私有化知识库 · 本地 Ollama 私有模型 + 向量检索"],docs:["文档管理","上传与管理企业知识,按部门隔离权限"],chat:["AI 智能问答","答案来自向量检索到的知识,标注出处,找不到则拒答"],search:["全文检索","关键词检索文档原文"],finance:["财务工作台","按制度测算差旅预算、校验限额、预填报销单(确定性计算)"],talent:["人才库","上传简历 → 抽取 → 逐份确认入库(候选人 PII 独立分库,仅 HR 可见)"],users:["用户管理","账号与角色,席位受授权限制"],analytics:["数据分析","问答量、拒答率与满意度(企业版)"]};
+  var t=titles[state.view]||["",""];
+  var expWarn = lic.days_left!=null && lic.days_left<30 && !lic.expired;
+  var html=''
+    +'<div class="app">'
+    +'<aside class="sidebar">'
+    +'  <div class="brand"><div class="logo">'+S(IC.db,17)+'</div><div><div class="t1">知识库 AI</div><div class="t2">私有化知识中枢</div></div></div>'
+    +'  <nav class="nav">'+nav.map(function(n){ return '<button data-view="'+n[0]+'" class="'+(state.view===n[0]?"active":"")+'">'+S(n[2],17)+' '+n[1]+'</button>'; }).join("")+'</nav>'
+    +'  <div class="uinfo">'
+    +'    <div class="lic">授权:<b>'+esc(lic.edition_name||"")+'</b><br>席位 <b>'+(lic.seats_used||0)+' / '+(lic.seats||0)+'</b> · 有效期 '+esc(lic.expires||"")+'</div>'
+    +'    <div class="ubar"><div class="av">'+S(IC.user,15)+'</div><div class="nm">'+esc(state.user.username)+'<br><small>'+esc(state.roleNames[state.user.role]||state.user.role)+'</small></div><button class="lo" id="logoutBtn" title="退出登录">'+S(IC.logout,16)+'</button></div>'
+    +'  </div>'
+    +'</aside>'
+    +'<main class="main">'
+    +'  <div class="header"><div><div class="h1">'+t[0]+'</div><div class="h2">'+t[1]+'</div></div><div class="badge">'+S(IC.award,13)+' '+esc(lic.edition_name||"")+'</div></div>'
+    +(expWarn?'<div class="warn">授权将在 '+lic.days_left+' 天后到期,请及时续期。</div>':'')
+    +(lic.expired?'<div class="err">授权已过期。</div>':'')
+    +(state.err?'<div class="err">'+esc(state.err)+'</div>':'')
+    +'  <div class="content" id="content"></div>'
+    +'</main></div>';
+  document.getElementById("root").innerHTML=html;
+  document.querySelectorAll(".nav button").forEach(function(b){ b.onclick=function(){ state.view=b.getAttribute("data-view"); state.err=""; renderShell(); }; });
+  document.getElementById("logoutBtn").onclick=function(){ doLogout(false); };
+  renderContent();
+}
+
+function renderContent(){
+  var c=document.getElementById("content");
+  if(state.view==="home") return renderHome(c);
+  if(state.view==="docs") return renderDocs(c);
+  if(state.view==="chat") return renderChat(c);
+  if(state.view==="search") return renderSearch(c);
+  if(state.view==="finance") return renderFinance(c);
+  if(state.view==="talent") return renderTalent(c);
+  if(state.view==="users") return renderUsers(c);
+  if(state.view==="analytics") return renderAnalytics(c);
+}
+
+/* ---------- 首页 ---------- */
+function renderHome(c){
+  var stats=[["可见文档",state.stats.documents,"篇",IC.file],["知识片段",state.stats.chunks,"段",IC.db],["当前身份",state.roleNames[state.user.role]||state.user.role,"",IC.shield]];
+  c.className="content"; c.innerHTML=''
+    +'<div class="pad">'
+    +'<div class="grid3">'+stats.map(function(s){ return '<div class="card stat"><div class="l">'+S(s[3],14)+' '+s[0]+'</div><div class="v" style="font-size:'+(s[2]?"26px":"16px")+'">'+esc(s[1])+(s[2]?'<span style="font-size:14px;font-weight:400;color:var(--slate);margin-left:4px">'+s[2]+'</span>':'')+'</div></div>'; }).join("")+'</div>'
+    +'<div class="card"><div class="sectitle">试试这样问</div><div class="muted" style="font-size:12px;margin:4px 0 8px">点击直接进入 AI 问答(最后一个故意问知识库里没有的内容,看它如何拒答)</div>'
+    + sampleQs().map(function(q){ return '<button class="sq" data-q="'+esc(q)+'"><span class="l"><span style="color:var(--teal)">'+S(IC.chat,14)+'</span> '+esc(q)+'</span><span style="color:var(--slate)">'+S(IC.right,15)+'</span></button>'; }).join("")
+    +'</div></div>';
+  c.querySelectorAll(".sq").forEach(function(b){ b.onclick=function(){ var q=b.getAttribute("data-q"); state.view="chat"; renderShell(); ask(q); }; });
+}
+
+/* ---------- 文档 ---------- */
+function renderDocs(c){
+  var admin=isAdmin();
+  var list = state.docs.length ? state.docs.map(function(d){
+    var badge = d.status==="待确认" ? ' <span class="tag" style="background:#fef3c7;color:#92400e" title="OCR 低置信内容占比过高,建议人工核对后重新上传">待确认</span>' : '';
+    return '<div class="doc"><div class="top"><div class="title"><span style="color:var(--teal)">'+S(IC.file,15)+'</span> '+esc(d.title)+' <span class="tag">'+esc(d.dept)+'</span>'+badge+' <span style="font-size:10px;color:var(--slate)">'+d.n_chunks+' 段</span></div><div style="display:flex;gap:4px;flex-shrink:0"><button class="iconbtn" data-ask="'+esc(d.title)+'" style="color:var(--tealD)" title="就此文档提问">'+S(IC.chat,14)+'</button>'+(admin?'<button class="iconbtn" data-del="'+d.id+'">'+S(IC.trash,14)+'</button>':'')+'</div></div></div>';
+  }).join("") : '<div class="empty-box">当前可见范围内没有文档。</div>';
+  var addPanel = admin ? (
+    '<div><div class="sectitle" style="margin-bottom:12px">添加文档</div><div class="form">'
+    +'<input id="dTitle" placeholder="文档标题" />'
+    +'<select id="dDept">'+DEPTS.map(function(x){return '<option value="'+x+'">'+x+'</option>';}).join("")+'</select>'
+    +'<textarea id="dContent" rows="5" placeholder="粘贴文档内容,每行一段…"></textarea>'
+    +'<button class="btn btn-primary" id="dAdd">'+S(IC.plus,15)+' '+(state.busy?"处理中…":"粘贴入库")+'</button>'
+    +'<div style="text-align:center;font-size:12px;color:var(--slate)">或</div>'
+    +'<button class="btn btn-ghost" id="dUploadBtn">'+S(IC.upload,15)+' 上传文件(PDF / Word / 图片 / TXT)</button>'
+    +'<div style="font-size:11px;color:var(--slate);line-height:1.5">扫描件/图片走本地 OCR:识别质量过低会被标「待确认」并暂不参与问答。额度表等数字类制度请尽量上传 Word/文本版。</div>'
+    +'<input type="file" id="dFile" accept=".pdf,.docx,.txt,.md,.csv,.png,.jpg,.jpeg,.bmp,.webp,.tif,.tiff" style="display:none" />'
+    +'</div></div>'
+  ) : '<div><div class="card" style="font-size:13px;color:var(--slate)">仅管理员可添加/删除文档。你可在「AI 问答」「全文检索」中使用知识库。</div></div>';
+  c.className="content"; c.innerHTML='<div class="pad"><div class="grid2"><div><div class="sectitle" style="margin-bottom:12px">知识库文档('+state.docs.length+')</div>'+list+'</div>'+addPanel+'</div></div>';
+  c.querySelectorAll("[data-ask]").forEach(function(b){ b.onclick=function(){ state.chatPrefill="关于《"+b.getAttribute("data-ask")+"》,我想了解:"; state.view="chat"; renderShell(); }; });
+  if(admin){
+    c.querySelectorAll("[data-del]").forEach(function(b){ b.onclick=function(){ delDoc(b.getAttribute("data-del")); }; });
+    document.getElementById("dAdd").onclick=addDoc;
+    document.getElementById("dUploadBtn").onclick=function(){ document.getElementById("dFile").click(); };
+    document.getElementById("dFile").onchange=uploadFile;
+  }
+}
+async function addDoc(){
+  var t=document.getElementById("dTitle").value.trim(), dep=document.getElementById("dDept").value, ct=document.getElementById("dContent").value.trim();
+  if(!t||!ct||state.busy) return; state.busy=true; renderContent();
+  try{ await api("/api/documents",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:t,dept:dep,content:ct})}); state.busy=false; await refresh(); }
+  catch(e){ state.busy=false; state.err="入库失败:"+e.message; renderShell(); }
+}
+async function uploadFile(e){
+  var f=e.target.files[0]; if(!f) return; var dep=document.getElementById("dDept").value; state.busy=true; renderContent();
+  try{ var fd=new FormData(); fd.append("file",f); fd.append("dept",dep); await api("/api/documents/upload",{method:"POST",body:fd}); state.busy=false; await refresh(); }
+  catch(er){ state.busy=false; state.err="上传失败:"+er.message; renderShell(); }
+}
+function delDoc(id){ confirmDanger("删除该文档?此操作不可撤销,该文档的检索片段会一并移除。", async function(){ try{ await api("/api/documents/"+id,{method:"DELETE"}); await refresh(); }catch(e){ state.err=e.message; renderShell(); } }); }
+
+/* ---------- 问答 ---------- */
+function renderChat(c){
+  var modelSel = state.models.length>1 ? (
+    '<div class="modelbar">回答模型:<select id="modelSel">'
+    + state.models.map(function(m){ return '<option value="'+m.id+'"'+(m.id===state.modelId?" selected":"")+'>'+esc(m.name)+'</option>'; }).join("")
+    + '</select><span class="modelhint">切换后,新的提问将由所选模型回答</span></div>'
+  ) : '';
+  c.className="content"; c.style.overflow="hidden"; c.innerHTML=''
+    +'<div class="chat"><div class="msgs" id="msgs"></div>'
+    +'<div class="chatinput">'+modelSel+'<div class="inbox"><textarea id="chatIn" rows="1" placeholder="输入问题,Enter 发送 / Shift+Enter 换行"></textarea>'
+    +'<button class="sendbtn" id="sendBtn">'+S(IC.send,16)+'</button></div></div></div>';
+  document.getElementById("chatIn").onkeydown=function(e){ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); ask(); } };
+  document.getElementById("sendBtn").onclick=function(){ ask(); };
+  var ms=document.getElementById("modelSel");
+  if(ms) ms.onchange=function(e){ state.modelId=e.target.value; localStorage.setItem("kb_model",state.modelId); };
+  if(state.chatPrefill){ var ci=document.getElementById("chatIn"); if(ci){ ci.value=state.chatPrefill; ci.focus(); } state.chatPrefill=""; }
+  renderMsgs();
+}
+function renderMsgs(){
+  var box=document.getElementById("msgs"); if(!box) return;
+  if(state.messages.length===0 && !state.loading){
+    box.innerHTML='<div class="empty"><div class="ic">'+S(IC.spark,26)+'</div><div style="font-weight:700;font-size:18px;color:var(--navy)">问我任何关于公司制度的问题</div><div style="font-size:12px;color:var(--slate);margin:4px 0 0">答案只来自你有权限看到的知识库,并标注出处</div><div class="chips">'+sampleQs().slice(0,4).map(function(q){ return '<button class="chip" data-q="'+esc(q)+'">'+esc(q)+'</button>'; }).join("")+'</div></div>';
+    box.querySelectorAll(".chip").forEach(function(b){ b.onclick=function(){ ask(b.getAttribute("data-q")); }; });
+    return;
+  }
+  var html=state.messages.map(function(m,i){
+    if(m.role==="user") return '<div class="row-user"><div class="bub-user">'+esc(m.text)+'</div></div>';
+    var srcs="";
+    if(m.sources && m.sources.length){
+      var open=state.expanded["m"+i];
+      srcs+='<button class="srctoggle" data-toggle="m'+i+'">'+S(open?IC.down:IC.right,14)+' 引用来源 · '+m.sources.length+' 条</button>';
+      if(open){ srcs+=m.sources.map(function(s,j){
+        var so=state.expanded["m"+i+"s"+j];
+        return '<div class="src"><button class="h" data-src="m'+i+'s'+j+'"><span class="l"><span class="num">'+(j+1)+'</span> '+S(IC.book,13)+' 《'+esc(s.doc_title)+'》 <span class="tag">'+esc(s.dept)+'</span>'+(typeof s.score==="number"?' <span style="font-size:10px;color:var(--slate)">相似度 '+s.score+'</span>':'')+'</span>'+S(so?IC.down:IC.right,13)+'</button>'+(so?'<div class="body">'+esc(s.text)+'</div>':'')+'</div>';
+      }).join(""); }
+    }
+    var fb = m.qid ? '<div class="fb"><span>这条回答有用吗?</span><button data-rate="1" data-qid="'+m.qid+'" data-mi="'+i+'" style="opacity:'+(m.rating===1?1:.5)+'">👍</button><button data-rate="-1" data-qid="'+m.qid+'" data-mi="'+i+'" style="opacity:'+(m.rating===-1?1:.5)+'">👎</button></div>' : '';
+    var mt = m.model ? '<div class="modeltag">'+S(IC.spark,11)+' 由 '+esc(m.model)+' 回答</div>' : '';
+    var tt = "";  // 计算明细卡:确定性工具的分项结果,让"它会算账"看得见
+    if(m.tool_trace && m.tool_trace.length){
+      tt='<div class="src" style="margin-top:8px"><div class="h" style="cursor:default"><span class="l">'+S(IC.wallet,13)+' 计算明细 · 确定性工具</span></div><div class="body">'
+        +m.tool_trace.map(function(t){ return '<div style="margin-bottom:8px"><div class="muted" style="font-size:11px;margin-bottom:2px">'+esc(t.tool)+'</div>'+fmtTool(t.result)+'</div>'; }).join("")
+        +'</div></div>';
+    }
+    var cta = m.refused ? '<div class="muted" style="font-size:12px;margin-top:8px">'+(isAdmin()?'可在「文档管理」补充相关文档,或':'可')+'联系对应部门负责人补充制度依据。</div>' : '';
+    return '<div class="row-ai"><div class="ai-ic">'+S(IC.spark,16)+'</div><div class="ai-body"><div class="bub-ai">'+esc(m.text)+'</div>'+mt+tt+srcs+cta+fb+'</div></div>';
+  }).join("");
+  if(state.loading) html+='<div class="row-ai"><div class="ai-ic">'+S(IC.spark,16)+'</div><div class="loadbub"><span class="spin"></span> 正在检索知识库并生成回答…</div></div>';
+  box.innerHTML=html;
+  box.querySelectorAll("[data-toggle]").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-toggle"); state.expanded[k]=!state.expanded[k]; renderMsgs(); }; });
+  box.querySelectorAll("[data-src]").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-src"); state.expanded[k]=!state.expanded[k]; renderMsgs(); }; });
+  box.querySelectorAll("[data-rate]").forEach(function(b){ b.onclick=function(){ rate(b.getAttribute("data-qid"),parseInt(b.getAttribute("data-mi")),parseInt(b.getAttribute("data-rate"))); }; });
+  box.scrollTop=box.scrollHeight;
+}
+async function ask(q){
+  var ta=document.getElementById("chatIn");
+  var text=(q!=null?q:(ta?ta.value:"")).trim();
+  if(!text||state.loading) return;
+  if(ta && q==null) ta.value="";
+  state.messages.push({role:"user",text:text}); renderMsgs();
+  state.loading=true; renderMsgs();
+  try{
+    var r=await api("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:text,conversation_id:state.convId,model:state.modelId})});
+    state.convId=r.conversation_id||state.convId;
+    state.messages.push({role:"assistant",text:r.answer,sources:r.sources,qid:r.qid,rating:0,model:r.model,tool_trace:r.tool_trace,refused:r.refused});
+  }catch(e){ if(e.message!=="401") state.messages.push({role:"assistant",text:"暂时无法生成回答:请确认 Ollama 已运行,且所选模型已 ollama pull(切换模式需要两个模型都拉取)。",sources:[]}); }
+  state.loading=false; renderMsgs();
+}
+async function rate(qid,mi,val){
+  if(state.messages[mi]) state.messages[mi].rating=val; renderMsgs();
+  try{ await api("/api/feedback",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({qid:qid,rating:val})}); }catch(e){}
+}
+
+/* ---------- 财务工作台 ---------- */
+function fmtTool(res){
+  if(!res) return "";
+  if(res.error) return '<div class="err" style="padding:8px 12px;border-radius:8px;margin-top:8px">'+esc(res.error)+'</div>';
+  if(Array.isArray(res.明细)){  // prefill_claim:报销单明细
+    var rows=res.明细.map(function(r){
+      return '<div class="kv"><span><b>'+esc(r.项目)+'</b><br><span style="color:var(--slate);font-size:11px">'+esc(r.政策依据||"")+' · '+esc(r.状态||"")+'</span></span><b>'+esc(r.金额)+' 元</b></div>';
+    }).join("");
+    return '<div style="margin-top:8px">'+rows+'<div class="kv total"><b>可报合计</b><b style="color:var(--teal)">'+esc(res.可报合计)+' 元</b></div>'+(res.依据?'<div class="muted" style="font-size:11px;margin-top:6px">依据 '+esc(res.依据)+'</div>':'')+'</div>';
+  }
+  var html=Object.keys(res).map(function(k){  // calc_budget / check_claim / trip_days:键值对
+    if(k==="依据") return "";
+    var v=res[k]; if(typeof v==="boolean") v=v?"是":"否";
+    return '<div class="kv"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div>';
+  }).join("");
+  return '<div style="margin-top:8px">'+html+(res.依据?'<div class="muted" style="font-size:11px;margin-top:6px">依据 '+esc(res.依据)+'</div>':'')+'</div>';
+}
+async function callFinTool(name,args,resId,btn){
+  var el=document.getElementById(resId); if(btn) btn.disabled=true;
+  try{ var r=await api("/api/tools/finance/"+name,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(args)}); el.innerHTML=fmtTool(r); }
+  catch(e){ el.innerHTML='<div class="err" style="padding:8px 12px;border-radius:8px;margin-top:8px">'+esc(e.message)+'</div>'; }
+  if(btn) btn.disabled=false;
+}
+function renderFinance(c){
+  var g=function(id){ return document.getElementById(id); };
+  c.className="content"; c.style.overflow="auto"; c.innerHTML='<div class="pad">'
+    +'<div class="muted" style="font-size:12px;margin-bottom:16px">以下测算由确定性代码按《差旅与报销制度》计算,金额可信;同样的问题也可以直接在「AI 问答」里用自然语言问。</div>'
+    +'<div class="grid2" style="align-items:start">'
+    +'<div class="card fw"><div class="sectitle">出差预算测算</div><div class="muted" style="font-size:12px;margin:4px 0 12px">住宿上限×晚数 + 餐补×天数</div>'
+      +'<div class="r"><label>城市</label><input id="b_city" placeholder="如 成都 / 北京"></div>'
+      +'<div class="g3"><div><label>开始日期</label><input id="b_s" type="date"></div><div><label>结束日期</label><input id="b_e" type="date"></div><div><label>&nbsp;</label><button class="btn btn-ghost" id="b_days" style="width:100%">推算天数</button></div></div>'
+      +'<div class="g"><div><label>住宿晚数</label><input id="b_nights" type="number" min="1"></div><div><label>餐补天数</label><input id="b_days2" type="number" min="1"></div></div>'
+      +'<button class="btn btn-primary" id="b_go">测算预算</button><div id="b_res"></div></div>'
+    +'<div class="card fw"><div class="sectitle">房费限额校验</div><div class="muted" style="font-size:12px;margin:4px 0 12px">单晚房价是否超所在城市档位上限</div>'
+      +'<div class="r"><label>城市</label><input id="c_city" placeholder="如 上海"></div>'
+      +'<div class="r"><label>单晚房价(元)</label><input id="c_price" type="number" min="0"></div>'
+      +'<button class="btn btn-primary" id="c_go">校验</button><div id="c_res"></div></div>'
+    +'<div class="card fw"><div class="sectitle">报销单预填</div><div class="muted" style="font-size:12px;margin:4px 0 12px">超标部分按上限截断并注明自理</div>'
+      +'<div class="r"><label>城市</label><input id="p_city" placeholder="如 上海"></div>'
+      +'<div class="g3"><div><label>晚数</label><input id="p_nights" type="number" min="1"></div><div><label>天数</label><input id="p_days" type="number" min="1"></div><div><label>单价</label><input id="p_price" type="number" min="0"></div></div>'
+      +'<button class="btn btn-primary" id="p_go">生成预填明细</button><div id="p_res"></div></div>'
+    +'</div></div>';
+  g("b_days").onclick=async function(){
+    var s=g("b_s").value, e=g("b_e").value; if(!s||!e) return;
+    try{ var r=await api("/api/tools/finance/trip_days",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({start:s,end:e})});
+      if(r.error){ g("b_res").innerHTML=fmtTool(r); } else { g("b_nights").value=r.晚数; g("b_days2").value=r.天数; }
+    }catch(err){ g("b_res").innerHTML='<div class="err" style="padding:8px 12px;border-radius:8px;margin-top:8px">'+esc(err.message)+'</div>'; }
+  };
+  g("b_go").onclick=function(){ callFinTool("calc_budget",{city:g("b_city").value.trim(),nights:parseInt(g("b_nights").value)||0,days:parseInt(g("b_days2").value)||0},"b_res",this); };
+  g("c_go").onclick=function(){ callFinTool("check_claim",{city:g("c_city").value.trim(),nightly_price:parseFloat(g("c_price").value)||0},"c_res",this); };
+  g("p_go").onclick=function(){ callFinTool("prefill_claim",{city:g("p_city").value.trim(),nights:parseInt(g("p_nights").value)||0,days:parseInt(g("p_days").value)||0,nightly_price:parseFloat(g("p_price").value)||0},"p_res",this); };
+}
+
+/* ---------- 人才库(HR;候选人 PII 独立分库,仅 hr 可见)---------- */
+var TF_EMAIL=/^[^@\s]+@[^@\s]+\.[^@\s]+$/, TF_PHONE=/^[\d\-+ ]{6,20}$/;
+async function loadTalent(){
+  var f=state.talentFilters, qs=[];
+  if(f.status) qs.push("status="+encodeURIComponent(f.status));
+  if(f.min_years) qs.push("min_years="+encodeURIComponent(f.min_years));
+  if(f.skill) qs.push("skill="+encodeURIComponent(f.skill));
+  if(f.education) qs.push("education="+encodeURIComponent(f.education));
+  try{ var r=await api("/api/talent"+(qs.length?"?"+qs.join("&"):"")); state.talentRows=r.candidates||[]; state.talentStatuses=r.statuses||state.talentStatuses;
+       var jr=await api("/api/jobs"); state.jobs=jr.jobs||[]; state.err=""; }
+  catch(e){ state.err="人才库加载失败:"+e.message; }
+}
+function renderTalent(c){
+  c.className="content"; c.style.overflow="auto"; c.innerHTML='<div class="pad"><div class="muted">加载中…</div></div>';
+  loadTalent().then(function(){ if(state.view==="talent") paintTalent(); });
+}
+function tModeBtn(m,label,badge,cur){
+  return '<button data-mode="'+m+'" class="btn '+(cur===m?'btn-primary':'btn-ghost')+'" style="width:auto;padding:8px 16px">'+label+(badge>0?' <span style="display:inline-block;min-width:16px;padding:0 5px;border-radius:999px;background:#E9A23B;color:#fff;font-size:11px;line-height:16px;text-align:center">'+badge+'</span>':'')+'</button>';
+}
+function eduTier(edu){
+  edu=edu||"";
+  if(/博士/.test(edu)) return "博士";
+  if(/硕士|研究生|MBA|EMBA/i.test(edu)) return "硕士";
+  if(/本科|学士/.test(edu)) return "本科";
+  if(/大专|专科|高职/.test(edu)) return "大专";
+  return "";
+}
+function talentChips(d){
+  var chips=[];
+  var edu=eduTier(d.education); if(edu) chips.push(edu);
+  if(d.years!=null && d.years!=="") chips.push(d.years+"年");
+  var sk=(d.skills||"").split(/[,，、;；]+/).map(function(s){return s.trim();}).filter(Boolean);
+  sk.slice(0,3).forEach(function(s){ chips.push(s); });
+  if(sk.length>3) chips.push("+"+(sk.length-3));
+  if(!chips.length && d.source_file) chips.push(d.source_file);
+  return chips.map(function(t){ return '<span class="tag">'+esc(t)+'</span>'; }).join("");
+}
+function talentRowHtml(d){
+  var isDraft=d.status==="草稿";
+  var actions = isDraft
+    ? '<button class="btn btn-primary" data-confirm="'+esc(d.id)+'" style="padding:4px 12px">核对</button>'
+    : '<label style="font-size:12px;color:var(--slate);display:inline-flex;align-items:center;gap:3px;cursor:pointer;padding:4px 6px"><input type="checkbox" data-cmpsel="'+esc(d.id)+'"'+(((state.compareSel||[]).indexOf(d.id)>=0)?" checked":"")+'>比</label><button class="btn btn-ghost" data-open="'+esc(d.id)+'" style="padding:4px 12px">查看</button>';
+  var statusEl = isDraft
+    ? '<span class="tag">'+esc(d.status)+'</span>'
+    : '<select class="rowstatus" data-rowstatus="'+esc(d.id)+'" title="改状态即推进" style="width:auto;height:26px;padding:2px 6px;font-size:11px">'+state.talentStatuses.filter(function(s){return s!=="草稿";}).map(function(s){return '<option value="'+esc(s)+'"'+(d.status===s?" selected":"")+'>'+esc(s)+'</option>';}).join("")+'</select>';
+  var dcheck = isDraft ? '<input type="checkbox" data-draftsel="'+esc(d.id)+'"'+(((state.draftSel||[]).indexOf(d.id)>=0)?" checked":"")+' style="margin-right:2px;cursor:pointer;vertical-align:middle">' : '';
+  return '<div class="doc talent-row"><div class="top"><div class="title">'+dcheck+'<span style="color:var(--teal)">'+S(IC.user,15)+'</span> '+esc(d.name||"(未抽出姓名)")+' '+statusEl+'</div><div style="display:flex;gap:6px">'+actions+'</div></div><div class="rowchips">'+talentChips(d)+'</div></div>';
+}
+function paintTalent(){
+  var c=document.getElementById("content"); if(!c) return;
+  var rows=state.talentRows, cf=state.talentConfirm, f=state.talentFilters;
+  var draftRows=rows.filter(function(d){return d.status==="草稿";});
+  var poolRows=rows.filter(function(d){return d.status!=="草稿";});
+  if(!state.talentMode) state.talentMode="jobs";  // §9.1 HR 默认从招聘岗位进入
+  var mode=state.talentMode;
+  var openJobs=(state.jobs||[]).filter(function(j){return j.status==="开放";}).length;
+  var nav='<div style="display:flex;gap:8px;margin-bottom:16px">'+tModeBtn("jobs","招聘岗位",openJobs,mode)+tModeBtn("intake","简历收件箱",draftRows.length,mode)+tModeBtn("pool","人才总库",0,mode)+'</div>';
+  var upload='<div class="card" style="margin-bottom:16px"><div class="sectitle" style="margin-bottom:10px">上传简历</div>'
+    +'<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
+    +'<button class="btn btn-ghost" id="tUpBtn" style="width:auto;padding:8px 16px">'+S(IC.upload,15)+' 选择简历文件(PDF / Word / 图片)</button>'
+    +'<input type="file" id="tFile" accept=".pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.bmp,.webp,.tif,.tiff" style="display:none" />'
+    +'<span style="font-size:11px;color:var(--slate);flex:1;min-width:200px">上传后本地模型抽取为草稿,<b>需逐份核对确认才入库</b>(不做一键全部通过);简历内容按数据处理,其中任何指令一律不执行。</span>'
+    +(state.talentBusy?'<span class="muted" style="font-size:12px"><span class="spin"></span> 抽取中…</span>':'')
+    +(state.talentMsg?'<span style="font-size:12px;color:var(--tealD)">'+esc(state.talentMsg)+'</span>':'')
+    +'</div></div>';
+  var filters='<div class="card fw" style="margin-bottom:16px"><div class="sectitle" style="margin-bottom:10px">筛选候选人</div>'
+    +'<div class="g3"><div><label>最低年限</label><input id="tf_years" type="number" min="0" step="0.5" value="'+esc(f.min_years)+'"></div>'
+    +'<div><label>技能</label><input id="tf_skill" value="'+esc(f.skill)+'" placeholder="SQL"></div>'
+    +'<div><label>学历关键词</label><input id="tf_edu_filter" value="'+esc(f.education)+'" placeholder="硕士"></div></div>'
+    +'<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-primary" id="tf_filter" style="width:96px">筛选</button><button class="btn btn-ghost" id="tf_clear" style="width:96px">清空</button></div></div>';
+  var confirmCard = cf ? confirmCardHtml(cf) : '';
+  var draftList = draftRows.length ? draftRows.map(talentRowHtml).join("") : '<div class="empty-box">没有待核对的草稿,去上方上传简历开始。</div>';
+  var seg=state.talentPoolSeg||"";
+  var poolStatuses=state.talentStatuses.filter(function(s){return s!=="草稿";});
+  var segChip=function(val,label,n,on){ return '<button class="btn '+(on?"btn-primary":"btn-ghost")+'" data-seg="'+esc(val)+'" style="width:auto;padding:4px 12px;font-size:12px">'+label+'('+n+')</button>'; };
+  var segBar='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+segChip("","全部",poolRows.length,seg==="")+poolStatuses.map(function(s){return segChip(s,esc(s),poolRows.filter(function(d){return d.status===s;}).length,seg===s);}).join("")+'</div>';
+  var shownPool = seg ? poolRows.filter(function(d){return d.status===seg;}) : poolRows;
+  var poolList = shownPool.length ? shownPool.map(talentRowHtml).join("") : '<div class="empty-box">该状态下暂无候选人。</div>';
+  if(!state.compareSel) state.compareSel=[];
+  var cmpN=state.compareSel.length;
+  var compareBar = cmpN ? '<div class="card" style="margin-bottom:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:13px">已选 <b>'+cmpN+'</b> 人</span><button class="btn btn-ghost" id="cmp_go" style="width:auto;padding:6px 14px"'+(cmpN<2?" disabled":"")+'>并排速览</button><button class="btn btn-ghost" id="cmp_clear" style="width:auto;padding:6px 14px">清空</button><button class="btn btn-primary" id="bulk_go" style="width:auto;padding:6px 14px">群发('+cmpN+')</button></div>' : '';
+  var rightPanel = (state.showCompare && cmpN>=2) ? compareHtml() : (state.talentSelected ? candidateCardHtml(state.talentSelected) : '<div class="empty-box" style="margin-top:0">点候选人「查看」打开体检详情</div>');
+  if(!state.draftSel) state.draftSel=[];
+  var reviewBar = state.reviewQ ? '<span style="font-size:12px;color:var(--tealD);margin-left:10px">逐份快速过 '+(state.reviewQ.i+1)+'/'+state.reviewQ.list.length+'</span><button class="btn btn-ghost" id="tc_skip" style="width:auto;padding:6px 14px;margin-left:8px">跳过 →</button>' : '';
+  var draftToolbar = state.draftSel.length ? '<div class="card" style="margin-bottom:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:13px">已选 <b>'+state.draftSel.length+'</b> 份</span><button class="btn btn-ghost" id="tb_review" style="width:auto;padding:6px 14px">逐份快速过</button><button class="btn btn-ghost" id="tb_reject" style="width:auto;padding:6px 14px;color:#A23B3B;border-color:#E7C3C3">退回(删除)</button><button class="btn btn-ghost" id="tb_clear" style="width:auto;padding:6px 14px">清空选择</button></div>' : '';
+  var intakeRight = cf
+    ? '<div style="display:flex;align-items:center;margin-bottom:10px"><button class="btn btn-ghost" id="tc_back" style="width:auto;padding:6px 14px">← 收起</button>'+reviewBar+'</div>'+confirmCard
+    : '<div class="empty-box" style="margin-top:0">选择左侧「核对」,在此并排确认字段与原文后入库(逐份确认,不做一键全过)</div>';
+  var body = mode==="jobs" ? jobsHtml()
+    : mode==="intake"
+    ? upload+draftToolbar+'<div class="grid2" style="align-items:start"><div><div class="sectitle" style="margin:4px 0 10px">待核对('+draftRows.length+')</div>'+draftList+'</div><div style="position:sticky;top:16px">'+intakeRight+'</div></div>'
+    : filters+segBar+compareBar+(state.sendForm?sendFormHtml():'')+(state.sendBatch?sendBatchHtml():'')+'<div class="grid2" style="align-items:start"><div>'+poolList+'</div><div style="position:sticky;top:16px">'+rightPanel+'</div></div>';
+  c.innerHTML='<div class="pad">'+nav+body+'</div>';
+  var h2=document.querySelector(".header .h2"); if(h2) h2.textContent = mode==="jobs" ? "招聘岗位:在岗位内完成 JD · 招聘重点 · 评分规则 · 候选人复核(岗位中心主流程)" : mode==="intake" ? "简历收件箱:上传 → 抽取 → 逐份核对入库(候选人 PII 独立分库,仅 HR 可见)" : "人才总库:跨岗位搜索 · 复用 · 比较 · 查看历史";
+  c.querySelectorAll("[data-mode]").forEach(function(b){ b.onclick=function(){ state.talentMode=b.getAttribute("data-mode"); state.selectedJobId=""; paintTalent(); }; });
+  var up=document.getElementById("tUpBtn"); if(up){ up.onclick=function(){ document.getElementById("tFile").click(); }; document.getElementById("tFile").onchange=ingestResume; }
+  var filterBtn=document.getElementById("tf_filter"); if(filterBtn) filterBtn.onclick=applyTalentFilter;
+  var clearBtn=document.getElementById("tf_clear"); if(clearBtn) clearBtn.onclick=function(){ state.talentFilters={status:"",min_years:"",skill:"",education:""}; state.talentSelected=null; renderTalent(c); };
+  c.querySelectorAll("[data-open]").forEach(function(b){ b.onclick=function(){ openCandidate(b.getAttribute("data-open")); }; });
+  c.querySelectorAll("[data-cmpsel]").forEach(function(cb){ cb.onchange=function(){ toggleCompareSel(cb.getAttribute("data-cmpsel")); }; });
+  var cmpGo=document.getElementById("cmp_go"); if(cmpGo) cmpGo.onclick=function(){ state.showCompare=true; paintTalent(); };
+  var cmpClr=document.getElementById("cmp_clear"); if(cmpClr) cmpClr.onclick=function(){ state.compareSel=[]; state.showCompare=false; paintTalent(); };
+  var bulkGo=document.getElementById("bulk_go"); if(bulkGo) bulkGo.onclick=function(){ state.sendForm=true; state.sendBatch=null; paintTalent(); };
+  var sfClose=document.getElementById("sf_close"); if(sfClose) sfClose.onclick=function(){ state.sendForm=false; paintTalent(); };
+  var sfGo=document.getElementById("sf_go"); if(sfGo) sfGo.onclick=createSendBatch;
+  var sbClose=document.getElementById("sb_close"); if(sbClose) sbClose.onclick=function(){ state.sendBatch=null; paintTalent(); };
+  var sbConfirm=document.getElementById("sb_confirm"); if(sbConfirm) sbConfirm.onclick=confirmSendBatch;
+  var sbRetry=document.getElementById("sb_retry"); if(sbRetry) sbRetry.onclick=async function(){ try{ var r=await api("/api/send-batches/"+state.sendBatch.id+"/retry-failed",{method:"POST"}); state.sendBatch=r.batch||r; paintTalent(); }catch(e){ state.err="重试失败:"+e.message; renderShell(); } };
+  var sbExport=document.getElementById("sb_export"); if(sbExport) sbExport.onclick=function(){ exportSendCsv(state.sendBatch.id); };
+  c.querySelectorAll("[data-rs]").forEach(function(b){ b.onclick=function(){ var p=b.getAttribute("data-rs").split("|"); resolveSendItem(p[0], p[1]); }; });
+  var cmpClose=document.getElementById("cmp_close"); if(cmpClose) cmpClose.onclick=function(){ state.showCompare=false; paintTalent(); };
+  var matrixJob=document.getElementById("matrix_job"); if(matrixJob) matrixJob.onchange=function(){ state.matrixJobId=matrixJob.value; state.matrix=null; paintTalent(); };
+  var matrixGo=document.getElementById("matrix_go"); if(matrixGo) matrixGo.onclick=loadEvidenceMatrix;
+  c.querySelectorAll("[data-confirm]").forEach(function(b){ b.onclick=function(){ openConfirm(b.getAttribute("data-confirm")); }; });
+  c.querySelectorAll("[data-seg]").forEach(function(b){ b.onclick=function(){ state.talentPoolSeg=b.getAttribute("data-seg"); paintTalent(); }; });
+  c.querySelectorAll("[data-rowstatus]").forEach(function(sel){ sel.onchange=function(){ rowUpdateStatus(sel.getAttribute("data-rowstatus"), sel.value); }; });
+  var back=document.getElementById("tc_back"); if(back) back.onclick=function(){ state.talentConfirm=null; state.reviewQ=null; state.talentMsg=""; paintTalent(); };
+  var skip=document.getElementById("tc_skip"); if(skip) skip.onclick=function(){ var q=state.reviewQ; if(q && q.i+1<q.list.length){ q.i++; openConfirm(q.list[q.i]); } else { state.reviewQ=null; state.talentConfirm=null; paintTalent(); } };
+  var tbrev=document.getElementById("tb_review"); if(tbrev) tbrev.onclick=startReview;
+  var tbrej=document.getElementById("tb_reject"); if(tbrej) tbrej.onclick=batchReject;
+  var tbclr=document.getElementById("tb_clear"); if(tbclr) tbclr.onclick=function(){ state.draftSel=[]; paintTalent(); };
+  c.querySelectorAll("[data-draftsel]").forEach(function(cb){ cb.onchange=function(){ toggleDraftSel(cb.getAttribute("data-draftsel")); }; });
+  var go=document.getElementById("tf_go"); if(go) go.onclick=function(){ submitConfirm(cf.id); };
+  var st=document.getElementById("tc_status"); if(st) st.onchange=function(){ updateTalentStatus(state.talentSelected.id, st.value); };
+  var _cid=function(){ return state.talentSelected?state.talentSelected.id:""; };
+  var gapBtn=document.getElementById("jd_go"); if(gapBtn) gapBtn.onclick=function(){ runLLM("jd:"+_cid(), function(){ return runJdGap(_cid()); }); };
+  var evalBtn=document.getElementById("eval_go"); if(evalBtn) evalBtn.onclick=function(){ runLLM("eval:"+_cid(), function(){ return runCandidateEvaluation(_cid()); }); };
+  var evalRetry=document.getElementById("eval_retry"); if(evalRetry) evalRetry.onclick=function(){ runLLM("retry:"+_cid(), retryFailedDims); };
+  c.querySelectorAll("[data-cp]").forEach(function(b){ b.onclick=function(){ var p=b.getAttribute("data-cp").split("|"); runLLM("cp:"+_cid()+":"+p[0], function(){ return markCheckpoint(p[0],p[1]); }); }; });
+  var inviteBtn=document.getElementById("msg_invite"); if(inviteBtn) inviteBtn.onclick=function(){ runLLM("msgi:"+_cid(), function(){ return runMessageDraft(_cid(),"约面"); }); };
+  var followBtn=document.getElementById("msg_follow"); if(followBtn) followBtn.onclick=function(){ runLLM("msgf:"+_cid(), function(){ return runMessageDraft(_cid(),"跟进"); }); };
+  var iqBtn=document.getElementById("iq_go"); if(iqBtn) iqBtn.onclick=function(){ runLLM("iq:"+_cid(), function(){ return runInterviewQuestions(_cid()); }); };
+  c.querySelectorAll("[data-dtab]").forEach(function(b){ b.onclick=function(){ state.detailTab=b.getAttribute("data-dtab"); paintTalent(); }; });
+  var rvBtn=document.getElementById("rv_go"); if(rvBtn) rvBtn.onclick=function(){ runLLM("review:"+_cid(), function(){ return runReview(_cid()); }); };
+  var daBtn=document.getElementById("d_actions_btn"); if(daBtn) daBtn.onclick=function(){ state.detailActions=!state.detailActions; paintTalent(); };
+  c.querySelectorAll("[data-extoggle]").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-extoggle"); state.expanded[k]=!state.expanded[k]; paintTalent(); }; });
+  var jt=document.getElementById("jd_text"); if(jt) jt.oninput=function(){ state.jdText=jt.value; };
+  var jc=document.getElementById("job_create"); if(jc) jc.onclick=createJob;
+  c.querySelectorAll("[data-jobdel]").forEach(function(b){ b.onclick=function(){ deleteJob(b.getAttribute("data-jobdel")); }; });
+  c.querySelectorAll("[data-jobqueue-open]").forEach(function(b){ b.onclick=function(){ openJobEvaluationQueue(b.getAttribute("data-jobqueue-open")); }; });
+  c.querySelectorAll("[data-jobopen]").forEach(function(b){ b.onclick=function(){ openJobWorkspace(b.getAttribute("data-jobopen")); }; });
+  c.querySelectorAll("[data-jobtab]").forEach(function(b){ b.onclick=function(){ state.jobTab=b.getAttribute("data-jobtab"); paintTalent(); }; });
+  var jwBack=document.getElementById("jw_back"); if(jwBack) jwBack.onclick=function(){ state.selectedJobId=""; paintTalent(); };
+  var jwFocus=document.getElementById("jw_focus"); if(jwFocus) jwFocus.oninput=function(){ state.hiringFocus=jwFocus.value; };
+  var jwAi=document.getElementById("jw_aidraft"); if(jwAi) jwAi.onclick=function(){ runLLM("aidraft:"+state.selectedJobId, jwAiDraft); };
+  c.querySelectorAll("[data-jobstatus]").forEach(function(sel){ sel.onchange=function(){ updateJobStatus(sel.getAttribute("data-jobstatus"), sel.value); }; });
+  var jjs=document.getElementById("jd_job"); if(jjs) jjs.onchange=function(){ state.jdJobId=jjs.value; paintTalent(); };
+  c.querySelectorAll("[data-rubric-open]").forEach(function(b){ b.onclick=function(){ openRubricEditor(b.getAttribute("data-rubric-open")); }; });
+  var rbAdd=document.getElementById("rb_add"); if(rbAdd) rbAdd.onclick=addRubricDimension;
+  var rbReb=document.getElementById("rb_rebalance"); if(rbReb) rbReb.onclick=function(){ runLLM("rebalance:"+(state.rubricJobId||state.selectedJobId), rebalanceWeights); };
+  var rbAddPool=document.getElementById("rb_addpool"); if(rbAddPool) rbAddPool.onclick=addFromPool;
+  c.querySelectorAll("[data-wplus]").forEach(function(b){ b.onclick=function(){ stepWeight(parseInt(b.getAttribute("data-wplus")),5); }; });
+  c.querySelectorAll("[data-wminus]").forEach(function(b){ b.onclick=function(){ stepWeight(parseInt(b.getAttribute("data-wminus")),-5); }; });
+  c.querySelectorAll("[data-poolsel]").forEach(function(cb){ cb.onchange=function(){ togglePoolSel(parseInt(cb.getAttribute("data-poolsel"))); }; });
+  c.querySelectorAll('input[id^="rb_weight_"]').forEach(function(inp){ inp.onchange=function(){ collectRubricForm(); paintTalent(); }; });
+  var rbSave=document.getElementById("rb_save"); if(rbSave) rbSave.onclick=saveRubricDraft;
+  var rbFreeze=document.getElementById("rb_freeze"); if(rbFreeze) rbFreeze.onclick=freezeRubricDraft;
+  var rbCopy=document.getElementById("rb_copy"); if(rbCopy) rbCopy.onclick=copyFrozenRubric;
+  c.querySelectorAll("[data-rbdel]").forEach(function(b){ b.onclick=function(){ removeRubricDimension(parseInt(b.getAttribute("data-rbdel"))); }; });
+  var attachBtn=document.getElementById("job_attach"); if(attachBtn) attachBtn.onclick=function(){ attachCandidateToJob(state.jdJobId,state.talentSelected.id); };
+  var detachBtn=document.getElementById("job_detach"); if(detachBtn) detachBtn.onclick=function(){ detachCandidateFromJob(state.jdJobId,state.talentSelected.id); };
+}
+function applyTalentFilter(){
+  state.talentFilters={
+    status:"",
+    min_years:(document.getElementById("tf_years").value||"").trim(),
+    skill:(document.getElementById("tf_skill").value||"").trim(),
+    education:(document.getElementById("tf_edu_filter").value||"").trim()
+  };
+  state.talentSelected=null; renderTalent(document.getElementById("content"));
+}
+function jobById(id){ var a=state.jobs||[]; for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return null; }
+function candidateAttachedToJob(job,cid){ return !!(job&&(job.candidate_ids||[]).indexOf(cid)>=0); }
+function jobCardHtml(j){
+  var flags=(j.flags&&j.flags.length)?'<span class="tag red" style="margin-left:6px">⚠ 受保护</span>':'';
+  var n=(j.candidate_ids||[]).length;
+  return '<div class="doc job-row" data-jobopen="'+esc(j.id)+'" style="cursor:pointer"><div class="top">'
+    +'<div class="title" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+esc(j.title||"(未命名)")+' <span class="tag">'+esc(j.status||"")+'</span>'+flags+'</div>'
+    +'<div class="muted" style="font-size:12px">候选人 '+n+' · 打开工作区 →</div></div></div>';
+}
+function jobQueueHtml(j){
+  if(state.jobQueueId!==j.id) return '';
+  var q=state.jobQueue;
+  if(!q) return '<div class="muted" style="font-size:12px;margin-top:10px">正在加载评分队列…</div>';
+  var groups=["优先评估","必须复核","常规复核","未评估"];
+  var html=groups.map(function(group){
+    var rows=(q.candidates||[]).filter(function(x){return x.queue===group;});
+    if(!rows.length) return '';
+    return '<div style="margin-top:10px"><b style="font-size:12px">'+esc(group)+'('+rows.length+')</b>'+rows.map(function(x){
+      var tentative=x.coverage!=null&&x.coverage<100;
+      var score=x.direct_fit_score==null?'—':(tentative?'暂定 '+x.direct_fit_score:x.direct_fit_score+'/100');
+      var meta=[]; if(tentative) meta.push('覆盖 '+x.coverage+'%'); if(x.pending_review) meta.push('待复核 '+x.pending_review); if(x.is_current===false) meta.push(esc(x.stale_reason||"需重新评分"));
+      var note=meta.length?' · '+meta.join(' · '):'';
+      return '<div class="kv" style="font-size:12px"><span>'+esc(x.name||"未命名")+' <span class="tag">'+esc(x.candidate_status||"")+'</span><br><span class="muted" style="font-size:10px">'+esc(x.evaluation_status||"未评估")+note+'</span></span><b>'+esc(score)+'</b></div>';
+    }).join('')+'</div>';
+  }).join('')||'<div class="muted" style="font-size:12px;margin-top:10px">当前岗位尚未挂候选人。</div>';
+  return '<div class="card fw" style="padding:12px;margin-top:10px"><div class="sectitle" style="font-size:13px">岗位评分队列</div><div class="muted" style="font-size:11px;margin:4px 0 8px">仅使用当前简历与当前冻结版本；队列不自动改状态、不自动录用或淘汰。</div>'+html+'</div>';
+}
+async function openJobEvaluationQueue(jobId){
+  state.jobQueueId=jobId; state.jobQueue=null; paintTalent();
+  try{ state.jobQueue=await api("/api/jobs/"+jobId+"/evaluation-queue"); paintTalent(); }
+  catch(e){ state.jobQueue={candidates:[]}; state.err="加载岗位评分队列失败:"+e.message; renderShell(); }
+}
+function jobsHtml(){
+  if(state.selectedJobId) return jobWorkspaceHtml();
+  var jobs=state.jobs||[];
+  var form='<div class="card fw" style="margin-bottom:16px"><div class="sectitle" style="margin-bottom:10px">新建岗位 / JD</div>'
+    +'<div class="r"><label>岗位名称</label><input id="job_title" placeholder="数据工程师"></div>'
+    +'<div class="r" style="margin-top:8px"><label>JD 文本(可直接粘 PDF 全文,清洗预览见岗位工作区)</label><textarea id="job_jd" rows="5" style="resize:vertical;min-height:90px;max-height:300px" placeholder="粘贴岗位 JD 全文;含年龄/性别/婚育等受保护要求会自动合规警示"></textarea></div>'
+    +'<div style="display:flex;gap:10px;align-items:center;margin-top:8px"><button class="btn btn-primary" id="job_create" style="width:auto;padding:8px 20px">建岗位</button>'
+    +(state.jobBusy?'<span class="muted" style="font-size:12px"><span class="spin"></span> 建岗位中…</span>':'')
+    +(state.jobMsg?'<span style="font-size:12px;color:var(--tealD)">'+esc(state.jobMsg)+'</span>':'')+'</div></div>';
+  var list=jobs.length ? jobs.map(jobCardHtml).join("") : '<div class="empty-box">还没有岗位。建一个后,点开进入岗位工作区完成 JD·招聘重点·评分规则·候选人队列。</div>';
+  return form+'<div class="sectitle" style="margin:4px 0 12px">岗位列表('+jobs.length+') · 点开进入工作区</div>'+list;
+}
+function jobWorkspaceHtml(){
+  var j=jobById(state.selectedJobId);
+  if(!j){ state.selectedJobId=""; return jobsHtml(); }
+  var tab=state.jobTab||"overview";
+  var d=state.rubricDraft;
+  var ruleTag=!d||!(d.dimensions||[]).length?"未建评分规则":(d.status==="已冻结"?"规则 v"+(d.version||"?")+"·已冻结":"规则草稿("+(d.dimensions||[]).length+"维)");
+  var n=(j.candidate_ids||[]).length;
+  var flags=(j.flags&&j.flags.length)?'<span class="tag red" style="margin-left:6px">⚠ 受保护</span>':'';
+  var header='<div class="card fw" style="margin-bottom:14px;padding:14px">'
+    +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" id="jw_back" style="width:auto;padding:4px 12px">← 岗位列表</button>'
+    +'<span style="font-weight:600;font-size:15px">'+esc(j.title||"(未命名)")+'</span><span class="tag">'+esc(j.status||"")+'</span>'+flags+'</div>'
+    +'<div class="muted" style="font-size:12px;margin-top:6px">'+esc(ruleTag)+' · 候选人 '+n+' 人</div></div>';
+  var tabs=[["overview","岗位概览"],["jd","JD与招聘重点"],["rubric","评分规则"],["queue","候选人队列"]];
+  var tabBar='<div style="display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:8px;flex-wrap:wrap">'
+    +tabs.map(function(t){return '<button data-jobtab="'+t[0]+'" class="btn '+(tab===t[0]?"btn-primary":"btn-ghost")+'" style="width:auto;padding:6px 14px;font-size:13px">'+t[1]+'</button>';}).join("")+'</div>';
+  var body=tab==="overview"?jobOverviewHtml(j):tab==="jd"?jobJdHtml(j):tab==="rubric"?(isRubricEditor()?rubricEditorHtml():'<div class="muted" style="font-size:12px">评分规则仅评分配置 HR(hr_rubric_editor)可编辑;你可在「候选人队列」查看结果。</div>'):jobQueueHtml(j);
+  return header+tabBar+body;
+}
+function jobOverviewHtml(j){
+  var cands=(state.jobQueue&&state.jobQueueId===j.id)?(state.jobQueue.candidates||[]):[];
+  var byStatus={}; cands.forEach(function(x){ byStatus[x.candidate_status]=(byStatus[x.candidate_status]||0)+1; });
+  var review=cands.filter(function(x){return x.queue==="必须复核";}).length;
+  var stageChips=Object.keys(byStatus).map(function(s){return '<span class="tag">'+esc(s)+' '+byStatus[s]+'</span>';}).join(" ")||'<span class="muted" style="font-size:12px">尚未挂候选人</span>';
+  var d=state.rubricDraft;
+  var ruleState=!d||!(d.dimensions||[]).length?"未建评分规则":(d.status==="已冻结"?"已冻结 v"+(d.version||"?"):"草稿("+(d.dimensions||[]).length+"维,未冻结)");
+  var jdOk=(j.jd_text||"").trim();
+  var next=!jdOk?"下一步:在「JD与招聘重点」补全 JD":(!d||d.status!=="已冻结")?"下一步:在「评分规则」建立并冻结评分规则":(cands.length===0?"下一步:把已确认候选人挂到本岗位并评分":"下一步:在「候选人队列」查看必须复核 "+review+" 人");
+  var statusSel='<select data-jobstatus="'+esc(j.id)+'" style="width:auto;height:26px;padding:2px 6px;font-size:11px">'+["开放","关闭"].map(function(s){return '<option value="'+s+'"'+(j.status===s?" selected":"")+'>'+s+'</option>';}).join("")+'</select>';
+  return '<div class="card fw" style="padding:14px"><div class="sectitle" style="margin-bottom:10px">岗位概览</div>'
+    +'<div class="kv" style="font-size:13px"><span>JD 完整度</span><b>'+(jdOk?"JD 已填":"JD 待补")+'</b></div>'
+    +'<div class="kv" style="font-size:13px"><span>评分规则</span><b>'+esc(ruleState)+'</b></div>'
+    +'<div class="kv" style="font-size:13px"><span>候选人阶段</span><span>'+stageChips+'</span></div>'
+    +'<div class="kv" style="font-size:13px"><span>必须复核</span><b>'+review+' 人</b></div>'
+    +'<div class="kv" style="font-size:13px"><span>岗位状态</span>'+statusSel+'</div>'
+    +'<div class="card" style="margin-top:10px;padding:10px 12px;background:#F7FAFA;font-size:12px">'+esc(next)+'</div>'
+    +'<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px"><span class="muted" style="font-size:11px">危险操作:</span> <button class="btn btn-ghost" data-jobdel="'+esc(j.id)+'" style="width:auto;padding:4px 12px;color:#A23B3B;border-color:#E7C3C3">删除岗位</button></div></div>';
+}
+function jobJdHtml(j){
+  var flags=(j.flags&&j.flags.length)?'<div class="warn" style="margin-bottom:10px;padding:8px 12px">⚠ JD 含受保护要求:'+esc(j.flags.join("、"))+'——评分维度不得据此设定,系统只作合规提示。</div>':'';
+  var poolNote=state.capabilityPool?'<div class="muted" style="font-size:12px;margin-top:8px">已拆解 '+state.capabilityPool.length+' 个能力候选草稿;规则构建器(下一阶段)用于从中挑选 5–8 项并冻结。</div>':'';
+  var busy=state.rubricMsg?'<span style="font-size:12px;color:var(--tealD);margin-left:8px">'+esc(state.rubricMsg)+'</span>':'';
+  return flags
+    +'<div class="card fw" style="padding:14px"><div class="sectitle" style="margin-bottom:8px">JD(清洗预览:PDF 断行/断词已归一)</div>'
+    +'<div style="white-space:pre-wrap;font-size:12px;line-height:1.6;background:#F7FAFA;border:1px solid var(--line);border-radius:8px;padding:10px;max-height:220px;overflow:auto">'+esc(j.jd_clean||j.jd_text||"(空 JD)")+'</div></div>'
+    +'<div class="card fw" style="padding:14px;margin-top:12px"><div class="sectitle" style="margin-bottom:6px">本轮招聘重点(选填)</div>'
+    +'<div class="muted" style="font-size:11px;margin-bottom:6px">描述这轮招聘的真实侧重、团队缺口、近期任务;填写后受其影响的能力会标注来源为「HR 本轮重点」。</div>'
+    +'<textarea id="jw_focus" rows="4" style="width:100%;resize:vertical;min-height:70px;max-height:220px" placeholder="如:更偏数据分析 / 需要快速验证 / 0→1 产品落地 / 客户沟通与方案交付 / 带队与跨部门推动">'+esc(state.hiringFocus||"")+'</textarea>'
+    +(isRubricEditor()?'<div style="margin-top:10px"><button class="btn btn-primary" id="jw_aidraft" style="width:auto;padding:8px 18px"'+(pend("aidraft:"+j.id)?' disabled':'')+'>'+(pend("aidraft:"+j.id)?loadLabel("aidraft:"+j.id,"拆解中"):'AI 拆解岗位能力')+'</button><span class="muted" style="font-size:11px;margin-left:8px">生成 8–12 能力候选草稿池,不改冻结版本</span>'+busy+'</div>':'')
+    +poolNote+'</div>';
+}
+function openJobWorkspace(jobId){
+  state.selectedJobId=jobId; state.jobTab="overview"; state.capabilityPool=null; state.hiringFocus=""; state.rubricMsg="";
+  paintTalent();
+  openRubricEditor(jobId);
+  openJobEvaluationQueue(jobId);
+}
+async function jwAiDraft(){
+  var jid=state.selectedJobId; if(!jid) return;
+  state.rubricMsg="正在 AI 拆解岗位能力…"; paintTalent();
+  try{ var r=await api("/api/jobs/"+jid+"/rubrics/draft",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({hiring_focus:state.hiringFocus||""})});
+    state.capabilityPool=r.candidates||[]; state.rubricMsg=""; paintTalent(); }
+  catch(e){ state.rubricMsg="拆解失败:"+e.message; paintTalent(); }
+}
+function blankRubricDimension(){ return {name:"",jd_requirement:"",evidence_rule:"",importance_level:"important",assessment_mode:"resume_evidence",weight:0,importance_reason:"",source_type:"hr_added",group_name:""}; }
+function collectRubricForm(){
+  var draft=state.rubricDraft; if(!draft) return null;
+  var val=function(id,fb){ var e=document.getElementById(id); return e?e.value.trim():(fb==null?"":fb); };
+  var num=function(id,fb){ var e=document.getElementById(id); return e?(Number(e.value)||0):(fb||0); };
+  var t=document.getElementById("rb_threshold"); if(t) draft.high_priority_threshold=Number(t.value)||0;
+  draft.dimensions=(draft.dimensions||[]).map(function(d,i){ return {
+    name:val("rb_name_"+i,d.name), jd_requirement:val("rb_jd_"+i,d.jd_requirement), evidence_rule:val("rb_rule_"+i,d.evidence_rule),
+    importance_level:val("rb_imp_"+i,d.importance_level)||"important", assessment_mode:val("rb_mode_"+i,d.assessment_mode)||"resume_evidence",
+    weight:num("rb_weight_"+i,d.weight), importance_reason:d.importance_reason||"", source_type:d.source_type||"hr_added", group_name:d.group_name||"" }; });
+  return draft;
+}
+function rubricEditorHtml(){
+  if(!isRubricEditor()) return '';
+  var job=jobById(state.rubricJobId||state.selectedJobId);
+  if(!job) return '<div class="muted" style="font-size:12px;margin:4px 0 14px">选择岗位后可由评分配置 HR 编辑并冻结该岗位版本。</div>';
+  var d=state.rubricDraft||{status:"草稿",high_priority_threshold:75,dimensions:[]};
+  var msg=state.rubricMsg?'<div class="muted" style="font-size:12px;margin-top:8px">'+esc(state.rubricMsg)+'</div>':'';
+  if(d.status==="已冻结") return frozenRubricHtml(job,d)+msg;
+  var impL={priority:"优先",important:"重要",bonus:"附加"};
+  var rows=(d.dimensions||[]).map(function(x,i){
+    var impSel='<select id="rb_imp_'+i+'">'+["priority","important","bonus"].map(function(k){return '<option value="'+k+'"'+((x.importance_level||"important")===k?' selected':'')+'>'+impL[k]+'</option>';}).join("")+'</select>';
+    var modeSel='<select id="rb_mode_'+i+'">'+[["resume_evidence","简历取证"],["self_reported","仅自述"]].map(function(m){return '<option value="'+m[0]+'"'+((x.assessment_mode||"resume_evidence")===m[0]?' selected':'')+'>'+m[1]+'</option>';}).join("")+'</select>';
+    var srcL={jd_explicit:"JD明文",jd_inferred:"JD推断",hiring_focus:"招聘重点",hr_added:"HR新增"};
+    var srcTag=x.source_type?'<span class="tag" style="font-size:10px">'+esc(srcL[x.source_type]||x.source_type)+'</span>':'';
+    return '<div class="card fw" style="padding:10px;margin-top:8px">'
+      +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="muted" style="font-size:11px">#'+(i+1)+'</span><input id="rb_name_'+i+'" value="'+esc(x.name||"")+'" placeholder="具体能力名称(不用『综合素质』等不可验证词)" style="flex:1;min-width:150px">'+srcTag+'<button class="btn btn-ghost" data-rbdel="'+i+'" style="width:auto;padding:3px 10px;color:#A23B3B;border-color:#E7C3C3">删除</button></div>'
+      +'<div class="g3" style="margin-top:6px"><div><label>重要性</label>'+impSel+'</div><div><label>评估方式</label>'+modeSel+'</div>'
+      +'<div><label>权重(5 步进)</label><div style="display:flex;gap:4px;align-items:center"><button class="btn btn-ghost" data-wminus="'+i+'" style="width:30px;padding:2px 0">−</button><input id="rb_weight_'+i+'" type="number" step="5" min="0" max="40" value="'+esc(x.weight||0)+'" style="width:58px;text-align:center"><button class="btn btn-ghost" data-wplus="'+i+'" style="width:30px;padding:2px 0">＋</button></div></div></div>'
+      +'<div class="r" style="margin-top:6px"><label>JD 要求</label><input id="rb_jd_'+i+'" value="'+esc(x.jd_requirement||"")+'" placeholder="对应 JD 原句或要求"></div>'
+      +'<div class="r" style="margin-top:6px"><label>证据规则</label><input id="rb_rule_'+i+'" value="'+esc(x.evidence_rule||"")+'" placeholder="什么样的简历原文算证据(冻结必填)"></div></div>';
+  }).join("")||'<div class="empty-box" style="margin-top:8px">从上方 AI 候选池勾选加入,或「添加维度」。最终 5–8 项,权重合计 100。</div>';
+  var sum=(d.dimensions||[]).reduce(function(a,x){return a+(Number(x.weight)||0);},0);
+  var nDims=(d.dimensions||[]).length;
+  var sumColor=sum===100?"var(--tealD)":"#A23B3B";
+  var countWarn=(nDims<5||nDims>8)?'<span style="color:#A23B3B;font-size:12px">· 维度需 5–8(当前 '+nDims+')</span>':'';
+  var footer='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><span style="font-weight:600;color:'+sumColor+'">合计 '+sum+'/100</span>'+countWarn+'<button class="btn btn-ghost" id="rb_rebalance" style="width:auto;padding:6px 14px"'+(pend("rebalance:"+job.id)?' disabled':'')+'>'+(pend("rebalance:"+job.id)?'<span class="spin"></span> 平衡中…':'按重要性重新平衡')+'</button></div>';
+  var actions='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn btn-ghost" id="rb_add" style="width:auto;padding:7px 14px">添加维度</button><button class="btn btn-ghost" id="rb_save" style="width:auto;padding:7px 14px">保存草稿</button><button class="btn btn-primary" id="rb_freeze" style="width:auto;padding:7px 14px">校验并冻结</button></div>';
+  var head='<div class="card fw" style="margin:0 0 12px;padding:14px"><div class="top"><div class="sectitle">评分规则 · '+esc(job.title||"")+' <span class="tag">草稿</span></div><button class="btn btn-ghost" data-rubric-open="'+esc(job.id)+'" style="width:auto;padding:4px 10px">刷新</button></div><div class="r" style="margin-top:8px"><label>优先评估阈值(0–100)</label><input id="rb_threshold" type="number" min="0" max="100" value="'+esc(d.high_priority_threshold==null?75:d.high_priority_threshold)+'"></div></div>';
+  return head+poolPickerHtml()+'<div class="card fw" style="padding:14px"><div class="sectitle" style="margin-bottom:2px">② HR 最终规则(5–8 维,合计 100)</div>'+rows+footer+actions+msg+'</div>';
+}
+function poolPickerHtml(){
+  var pool=state.capabilityPool; if(!pool||!pool.length) return '';
+  if(!state.poolSel) state.poolSel=[];
+  var srcL={jd_explicit:"JD明文",jd_inferred:"JD推断",hiring_focus:"招聘重点",hr_added:"HR新增"};
+  var groups={}; pool.forEach(function(c,idx){ (groups[c.group||"其他"]=groups[c.group||"其他"]||[]).push([idx,c]); });
+  var rows=Object.keys(groups).map(function(g){
+    return '<div style="margin-top:8px"><b style="font-size:12px">'+esc(g)+'</b>'+groups[g].map(function(p){var idx=p[0],c=p[1];
+      var checked=state.poolSel.indexOf(idx)>=0;
+      var merge=c.merge_suggestion?' <span class="tag red" style="font-size:10px">建议合并</span>':'';
+      var pre=c.preselect?' · 建议选':'';
+      return '<label class="doc" style="display:flex;align-items:flex-start;gap:8px;padding:8px;cursor:pointer;margin-top:4px"><input type="checkbox" data-poolsel="'+idx+'"'+(checked?' checked':'')+' style="margin-top:3px"><span style="flex:1"><b style="font-size:13px">'+esc(c.name)+'</b> <span class="tag" style="font-size:10px">'+esc(srcL[c.source_type]||c.source_type)+'</span> <span class="muted" style="font-size:10px">'+esc(c.confidence||"")+pre+'</span>'+merge+'<br><span class="muted" style="font-size:11px">'+esc(c.importance_reason||"")+'</span></span></label>';
+    }).join("")+'</div>';
+  }).join("");
+  return '<div class="card fw" style="padding:12px;margin-bottom:12px"><div class="top"><div class="sectitle" style="font-size:13px">① AI 能力候选池('+pool.length+')</div><button class="btn btn-primary" id="rb_addpool" style="width:auto;padding:5px 14px">加入选中到规则</button></div><div class="muted" style="font-size:11px;margin:2px 0 4px">勾选加入下方最终规则;默认预选=高置信/JD明文/招聘重点;受保护与不可验证候选已过滤。</div>'+rows+'</div>';
+}
+function frozenRubricHtml(job,d){
+  var impL={priority:"优先",important:"重要",bonus:"附加"},modeL={resume_evidence:"简历取证",self_reported:"仅自述"};
+  var rows=(d.dimensions||[]).map(function(x){ return '<div class="kv" style="font-size:12px"><span>'+esc(x.name||"")+' <span class="tag" style="font-size:10px">'+esc(impL[x.importance_level]||x.importance_level||"")+'/'+esc(modeL[x.assessment_mode]||"简历取证")+'</span></span><b>'+esc(x.weight||0)+'</b></div>'; }).join("");
+  var fp=(d.jd_fingerprint||"").slice(0,10);
+  return '<div class="card fw" style="padding:14px"><div class="top"><div class="sectitle">评分规则 · '+esc(job.title||"")+' <span class="tag">已冻结 v'+esc(d.version||"?")+'</span></div><button class="btn btn-ghost" data-rubric-open="'+esc(job.id)+'" style="width:auto;padding:4px 10px">刷新</button></div>'
+    +'<div class="muted" style="font-size:11px;margin:6px 0">冻结版本不可改;任何调整请「复制为新草稿」。JD 指纹 '+esc(fp)+'… · 阈值 '+esc(d.high_priority_threshold)+(d.hiring_focus?' · 招聘重点:'+esc(d.hiring_focus):'')+(d.frozen_by?' · 冻结人 '+esc(d.frozen_by):'')+'</div>'
+    +'<div style="margin-top:4px">'+rows+'</div>'
+    +'<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px"><button class="btn btn-primary" id="rb_copy" style="width:auto;padding:7px 14px">复制为新草稿</button></div></div>';
+}
+async function openRubricEditor(jobId){
+  state.rubricJobId=jobId; state.rubricMsg=""; state.rubricBusy=true; paintTalent();
+  try{ var r=await api("/api/jobs/"+jobId+"/rubrics"); state.rubricDraft=(r.rubrics||[])[0]||{status:"草稿",high_priority_threshold:75,dimensions:[]}; state.rubricBusy=false; paintTalent(); }
+  catch(e){ state.rubricBusy=false; state.err="加载评分规则失败:"+e.message; renderShell(); }
+}
+function addRubricDimension(){ var d=collectRubricForm(); if(!d) return; d.dimensions.push(blankRubricDimension()); paintTalent(); }
+function removeRubricDimension(i){ var d=collectRubricForm(); if(!d) return; d.dimensions.splice(i,1); paintTalent(); }
+async function copyFrozenRubric(){ var d=state.rubricDraft; if(!d||!d.id) return; try{ await api("/api/rubrics/"+d.id+"/copy",{method:"POST"}); state.rubricMsg="已复制为新草稿,请按当前岗位需要调整后冻结。"; await openRubricEditor(state.rubricJobId); }catch(e){ state.rubricMsg="复制失败:"+e.message; paintTalent(); } }
+function stepWeight(i,delta){ var d=collectRubricForm(); if(!d||!d.dimensions[i]) return; var w=(Number(d.dimensions[i].weight)||0)+delta; if(w<0)w=0; if(w>40)w=40; d.dimensions[i].weight=w; paintTalent(); }
+function togglePoolSel(idx){ if(!state.poolSel) state.poolSel=[]; var p=state.poolSel.indexOf(idx); if(p>=0) state.poolSel.splice(p,1); else state.poolSel.push(idx); }
+function addFromPool(){ var d=collectRubricForm(); if(!d) return; var sel=(state.poolSel||[]).slice(); if(!sel.length){ state.rubricMsg="请先勾选候选能力。"; paintTalent(); return; }
+  sel.sort(function(a,b){return a-b;}).forEach(function(idx){ var c=(state.capabilityPool||[])[idx]; if(!c) return;
+    d.dimensions.push({name:c.name,jd_requirement:c.source_quote||c.name,evidence_rule:c.evidence_rule||"",importance_level:c.importance_level||"important",assessment_mode:c.assessment_mode||"resume_evidence",weight:0,importance_reason:c.importance_reason||"",source_type:c.source_type||"hr_added",group_name:c.group||""}); });
+  state.poolSel=[]; state.rubricMsg="已加入 "+sel.length+" 个维度;用「按重要性重新平衡」配权重后校验并冻结。"; paintTalent(); }
+async function rebalanceWeights(){ var d=collectRubricForm(); if(!d||!d.dimensions.length) return;
+  try{ var r=await api("/api/rubrics/rebalance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({dimensions:d.dimensions.map(function(x){return {importance_level:x.importance_level,assessment_mode:x.assessment_mode};})})});
+    (r.weights||[]).forEach(function(w,i){ if(d.dimensions[i]) d.dimensions[i].weight=w; }); state.rubricMsg="已按重要性 5 点步进重新平衡(合计 100),可继续微调。"; paintTalent(); }
+  catch(e){ state.rubricMsg="重新平衡失败:"+e.message; paintTalent(); } }
+async function saveRubricDraft(){
+  var d=collectRubricForm(); if(!d) return; state.rubricMsg="";
+  var body={high_priority_threshold:d.high_priority_threshold,dimensions:d.dimensions};
+  try{ if(d.id) await api("/api/rubrics/"+d.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}); else await api("/api/jobs/"+state.rubricJobId+"/rubrics",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}); state.rubricMsg="草稿已保存。"; await openRubricEditor(state.rubricJobId); }
+  catch(e){ state.rubricMsg="保存失败:"+e.message; paintTalent(); }
+}
+async function freezeRubricDraft(){
+  var d=collectRubricForm(); if(!d) return;
+  if(!d.id){ await saveRubricDraft(); d=state.rubricDraft; if(!d||!d.id) return; }
+  try{ await api("/api/rubrics/"+d.id+"/freeze",{method:"POST"}); state.rubricMsg="评分规则已冻结；后续调整必须复制为新版本。"; state.matrix=null; var jid=state.rubricJobId; await openRubricEditor(jid); if(state.jobQueueId===jid) await openJobEvaluationQueue(jid); }
+  catch(e){ state.rubricMsg="冻结失败:"+e.message; paintTalent(); }
+}
+function renderJdInput(d){
+  // Step 2.6 Task 4:JD 来源从"每次粘贴"升级为"选岗位"(一次维护、多人复用);仍保留临时粘贴兜底
+  var jobs=state.jobs||[];
+  var opts='<option value="">— 临时粘贴 JD —</option>'+jobs.map(function(j){
+    return '<option value="'+esc(j.id)+'"'+(state.jdJobId===j.id?" selected":"")+'>'+esc(j.title||"(未命名岗位)")+'('+esc(j.status||"")+')</option>';
+  }).join("");
+  var sel='<div class="r"><label>JD 来源</label><select id="jd_job">'+opts+'</select></div>';
+  if(state.jdJobId){
+    var j=jobById(state.jdJobId);
+    var attached=candidateAttachedToJob(j,d.id);
+    var flags=(j&&j.flags&&j.flags.length)?'<div style="background:#FDECEC;color:#A23B3B;border-radius:8px;padding:6px 10px;font-size:12px;margin-top:6px">⚠ 该 JD 含受保护要求('+esc(j.flags.join("/"))+'),请合规审阅</div>':'';
+    var relation;
+    if(!j) relation='<div class="err" style="margin-top:8px;padding:8px 10px">岗位不存在，请重新选择。</div>';
+    else if(j.status!=="开放") relation='<div class="warn" style="margin-top:8px;padding:8px 10px">岗位已关闭，不能挂人或运行岗位分析。</div>';
+    else if(attached) relation='<div style="margin-top:8px"><span class="tag">已挂到该岗位</span> <button class="btn btn-ghost" id="job_detach" style="width:auto;padding:4px 10px;font-size:12px">从岗位移除</button></div>';
+    else if(d.status==="草稿"||d.status==="归档") relation='<div class="warn" style="margin-top:8px;padding:8px 10px">请先确认候选人，再挂到岗位。</div>';
+    else relation='<div style="margin-top:8px"><span class="muted" style="font-size:12px">先挂到岗位，才能运行该岗位的 JD 分析。</span> <button class="btn btn-primary" id="job_attach" style="width:auto;padding:4px 10px;font-size:12px">挂到岗位</button></div>';
+    return sel+'<div class="muted" style="font-size:11px;margin:8px 0 2px">岗位 JD(清洗预览)</div><div style="white-space:pre-wrap;font-size:12px;line-height:1.6;background:var(--cloud);border-radius:8px;padding:10px;max-height:160px;overflow:auto">'+esc((j&&(j.jd_clean||j.jd_text))||"(空 JD)")+'</div>'+flags+relation;
+  }
+  return sel+'<div class="r" style="margin-top:8px"><label>JD 文本</label><textarea id="jd_text" rows="5" style="width:100%;resize:vertical;min-height:90px;max-height:260px" placeholder="粘贴岗位 JD,生成带证据的差距/待追问点">'+esc(state.jdText||"")+'</textarea></div>';
+}
+function reviewHtml(d){
+  var r=state.review;
+  if(!(r&&r.id===d.id)) return '<div style="padding:6px 0"><button class="btn btn-primary" id="rv_go" style="width:auto;padding:8px 16px">'+S(IC.search,15)+' 运行简历体检</button><div class="muted" style="font-size:11px;margin-top:8px">AI 把这份主观简历 distill 成 速写 / 亮点(有实据)/ 存疑追问;只描述与追问,不下录用结论。</div></div>';
+  var hi=(r.highlights||[]).map(function(h){return '<div style="padding:5px 0;font-size:13px"><span style="color:var(--teal)">●</span> <b>'+esc(h.point)+'</b> <span class="muted" style="font-size:11px">— '+esc(h.evidence)+'</span></div>';}).join("")||'<div class="muted" style="font-size:12px">无有实据亮点。</div>';
+  var fl=(r.flags||[]).map(function(f){return '<div style="padding:6px 0;border-top:1px solid var(--line);font-size:13px"><span class="tag">'+esc(f.category)+'</span> '+esc(f.note)+'<div class="muted" style="font-size:11px;margin-top:2px">约面必问:'+esc(f.ask)+'</div></div>';}).join("")||'<div class="muted" style="font-size:12px">无存疑点。</div>';
+  var filt=(r.filtered||0)>0 ? '<div class="muted" style="font-size:11px;margin-top:8px">已过滤 '+r.filtered+' 条('+esc((r.filtered_reasons||[]).join("、"))+')——裁决归 HR、受保护属性/幻觉证据不采纳。</div>' : '';
+  return '<div><div style="font-size:13px;line-height:1.6;background:var(--cloud);border-radius:8px;padding:10px;margin-bottom:12px"><span class="muted">速写 ·</span> '+esc(r.summary||"")+'</div>'
+    +'<div class="sectitle" style="font-size:13px;margin-bottom:4px">亮点(有实据)</div>'+hi
+    +'<div class="sectitle" style="font-size:13px;margin:12px 0 4px">存疑 / 待追问</div>'+fl+filt
+    +'<div style="margin-top:12px"><button class="btn btn-ghost" id="rv_go" style="width:auto;padding:5px 14px">重跑体检</button></div></div>';
+}
+function rawHtml(d){
+  return '<div><label class="muted" style="font-size:12px;display:block;margin-bottom:6px">简历原文(对照 / 引用现形)</label>'
+    +expandable("raw:"+(d.id||""), d.original_text||"(无原文)", 200)+'</div>';
+}
+function jdGapHtml(d){
+  // 岗位契合渲染:受保护要求特殊样式 + jd_flags 合规警示条 + evidence 分治(未见显缺口/有据显原句)。契约见 resume.py jd_gap()
+  if(!(state.jdGap&&state.jdGap.id===d.id)) return '';
+  var g=state.jdGap;
+  var flags=(g.jd_flags&&g.jd_flags.length) ? '<div style="background:#FDECEC;color:#A23B3B;border-radius:8px;padding:8px 12px;font-size:12px;line-height:1.6;margin-bottom:10px">⚠ '+g.jd_flags.map(esc).join('<br>⚠ ')+'</div>' : '';
+  var items=(g.items&&g.items.length) ? g.items.map(function(x,i){
+    var head='<div class="src"><button class="h"><span class="l"><span class="num">'+(i+1)+'</span>'+esc(x.requirement)+' ';
+    if(x.protected)  // 受保护 JD 要求:照列 + 中和,不据此评判候选人(交 HR)
+      return head+'<span class="tag red">⚠ 受保护要求</span></span></button><div class="body">'+esc(x.gap)+'</div></div>';
+    var body = x.status==="未见"  // 未见:天生无简历证据,只显缺口
+      ? '<div class="body"><b>缺口:</b> '+esc(x.gap)+'</div>'
+      : '<div class="body"><b>差距/待追问:</b> '+esc(x.gap)+'<br><b>简历原句:</b> '+esc(x.evidence)+'</div>';
+    return head+'<span class="tag">'+esc(x.status||"")+'</span></span></button>'+body+'</div>';
+  }).join("") : '<div class="empty-box">没有返回可展示的差距条目。</div>';
+  var filt=(g.filtered||0)>0 ? '<div class="muted" style="font-size:11px;margin-top:6px">已过滤 '+g.filtered+' 条('+esc((g.filtered_reasons||[]).join("、"))+'),不予展示——裁决归 HR、受保护属性/幻觉证据不采纳。</div>' : '';
+  return flags+items+filt;
+}
+function evaluationHtml(d){
+  var e=state.evaluation;
+  if(!(e&&e.candidate_id===d.id)) return '';
+  if(e.is_current===false) return '<div class="warn" style="margin-top:10px;padding:8px 12px">'+esc(e.stale_reason||"候选人简历或评分规则已变更")+'：此历史评分不再作为当前复核或矩阵依据。请重新运行岗位评分。</div>';
+  if(e.status==="unassessed") return '<div class="warn" style="margin-top:10px;padding:8px 12px">本次评分未完成，不能按低分处理；请检查简历原文或重新运行。</div>';
+  var impL={priority:"优先",important:"重要",bonus:"附加"}, modeL={resume_evidence:"简历取证",self_reported:"仅自述"}, cpL={verified:"已核实",concern:"存疑",not_applicable:"无需",pending:"待核"};
+  var anyFailed=false;
+  var rows=(e.items||[]).map(function(x){
+    var isFail=x.evidence_status==="needs_review"; if(isFail) anyFailed=true;
+    var cpActive = isFail || (x.assessment_mode==="self_reported" && ["confirmed","partial"].indexOf(x.evidence_status)>=0 && x.checkpoint_status!=="verified" && x.checkpoint_status!=="not_applicable");
+    var ev=(x.evidence||[]).map(esc).join("；")||"—";
+    var tags='<span class="tag" style="font-size:10px">'+esc(impL[x.importance_level]||x.importance_level||"")+'/'+esc(modeL[x.assessment_mode]||"简历取证")+'</span>';
+    var statusLine=isFail?('<span style="color:#A23B3B">需复核'+(x.failure_code?'('+esc(x.failure_code)+')':'')+(x.attempt_count>1?' · 已试 '+esc(x.attempt_count):'')+'</span>'):(esc(x.evidence_status)+' · 系数 '+esc(x.evidence_coefficient!=null?x.evidence_coefficient:"—"));
+    var cpTag=(x.checkpoint_status&&x.checkpoint_status!=="not_applicable"&&x.checkpoint_status!=="pending")?' · 考核点:'+esc(cpL[x.checkpoint_status]||x.checkpoint_status):'';
+    var cpP=pend("cp:"+e.candidate_id+":"+x.dimension_id);
+    var cpBtns=cpActive?'<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap"><span class="muted" style="font-size:10px">面试考核点:</span>'
+      +'<button class="btn btn-ghost" data-cp="'+esc(x.dimension_id)+'|verified" style="width:auto;padding:1px 8px;font-size:11px"'+(cpP?' disabled':'')+'>已核实</button>'
+      +'<button class="btn btn-ghost" data-cp="'+esc(x.dimension_id)+'|concern" style="width:auto;padding:1px 8px;font-size:11px;color:#A23B3B"'+(cpP?' disabled':'')+'>存疑</button>'
+      +'<button class="btn btn-ghost" data-cp="'+esc(x.dimension_id)+'|not_applicable" style="width:auto;padding:1px 8px;font-size:11px"'+(cpP?' disabled':'')+'>无需</button></div>':'';
+    return '<div class="kv" style="align-items:flex-start"><span><b>'+esc(x.name||"维度")+'</b> '+tags+'<br><span class="muted" style="font-size:11px">'+statusLine+(x.transferable?' · <b style="color:var(--tealD)">可迁移能力</b>':'')+cpTag+'</span><br><span class="muted" style="font-size:11px">证据：'+ev+'</span>'+cpBtns+'</span><b>'+esc(x.weight!=null?x.weight:"")+'</b></div>';
+  }).join("");
+  var cov=e.coverage, tentative=cov!=null&&cov<100;
+  var scoreLbl=tentative?'暂定 '+esc(e.direct_fit_score):esc(e.direct_fit_score)+'/100';
+  var covLine=(cov!=null?'证据覆盖率 '+esc(cov)+'%'+(tentative?'(暂定,不进优先自动分组)':''):'')+' · 评分仅辅助复核,不自动改状态;可迁移证据不加分只提示。';
+  var retryBtn=anyFailed?'<button class="btn btn-ghost" id="eval_retry" style="width:auto;padding:5px 12px;margin-top:8px"'+(pend("retry:"+e.candidate_id)?' disabled':'')+'>'+(pend("retry:"+e.candidate_id)?'<span class="spin"></span> 重跑中…':'重新评估失败维度')+'</button>':'';
+  return '<div class="card" style="margin-top:10px;padding:12px"><div class="top"><div class="sectitle">岗位契合 · '+scoreLbl+'</div><span class="tag">'+esc(e.queue)+'</span></div><div class="muted" style="font-size:11px;margin:4px 0 8px">'+covLine+'</div>'+rows+retryBtn+'</div>';
+}
+async function retryFailedDims(){
+  var d=state.talentSelected, e=state.evaluation; if(!d||!e||!e.job_id) return;
+  try{ state.evaluation=await api("/api/jobs/"+e.job_id+"/candidates/"+d.id+"/evaluate/retry",{method:"POST"}); state.talentMsg="已重跑失败维度。"; paintTalent(); }
+  catch(err){ state.err="重试失败:"+err.message; renderShell(); }
+}
+async function markCheckpoint(dimId, status){
+  var d=state.talentSelected, e=state.evaluation; if(!d||!e||!e.job_id) return;
+  try{ state.evaluation=await api("/api/jobs/"+e.job_id+"/candidates/"+d.id+"/checkpoints",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({dimension_id:dimId,checkpoint_status:status})}); paintTalent(); }
+  catch(err){ state.err="标注考核点失败:"+err.message; renderShell(); }
+}
+function candidateCardHtml(d){
+  var tab=state.detailTab||"review";
+  var opts=state.talentStatuses.map(function(s){return '<option value="'+esc(s)+'"'+(d.status===s?' selected':'')+'>'+esc(s)+'</option>';}).join("");
+  var digest=[d.phone,d.email,eduTier(d.education)].filter(Boolean).map(esc).join(" · ");
+  var gap=jdGapHtml(d), evaluation=evaluationHtml(d);
+  var comm=state.commDraft&&state.commDraft.id===d.id ? '<div class="card" style="margin-top:10px;padding:12px"><div class="sectitle" style="margin-bottom:8px">沟通草稿</div><div class="kv"><span>收件人</span><b>'+esc(state.commDraft.recipient.name||"")+' '+esc(state.commDraft.recipient.email||"")+'</b></div><div class="kv"><span>标题</span><b>'+esc(state.commDraft.subject||"")+'</b></div><div style="white-space:pre-wrap;font-size:13px;line-height:1.6;margin-top:8px">'+esc(state.commDraft.body||"")+'</div></div>' : '';
+  var questions=state.interviewQs&&state.interviewQs.id===d.id ? '<div class="card" style="margin-top:10px;padding:12px"><div class="sectitle" style="margin-bottom:8px">面试问题草稿</div>'+(state.interviewQs.questions||[]).map(function(q,i){return '<div class="kv"><span>'+(i+1)+'</span><b>'+esc(q)+'</b></div>';}).join("")+'</div>' : '';
+  var actions = state.detailActions ? '<div class="card" style="margin:6px 0 10px;padding:12px">'
+    +'<div class="r"><label>状态推进</label><select id="tc_status">'+opts+'</select></div>'
+    +'<div class="g3"><div><label>岗位</label><input id="msg_job" placeholder="数据工程师"></div><div><label>时间</label><input id="msg_time" placeholder="周五 10:00"></div><div><label>地点</label><input id="msg_loc" placeholder="线上"></div></div>'
+    +'<div style="display:flex;gap:8px"><button class="btn btn-ghost" id="msg_invite" style="flex:1"'+(pend("msgi:"+d.id)?' disabled':'')+'>'+(pend("msgi:"+d.id)?'<span class="spin"></span> 生成中…':'生成约面话术')+'</button><button class="btn btn-ghost" id="msg_follow" style="flex:1"'+(pend("msgf:"+d.id)?' disabled':'')+'>'+(pend("msgf:"+d.id)?'<span class="spin"></span> 生成中…':'生成跟进话术')+'</button></div>'
+    +'<div id="msg_res">'+comm+'</div></div>' : '';
+  var tabBtn=function(k,label){ return '<button data-dtab="'+k+'" class="btn '+(tab===k?"btn-primary":"btn-ghost")+'" style="width:auto;padding:5px 12px;font-size:13px">'+label+'</button>'; };
+  var tabbar='<div style="display:flex;gap:6px;margin:10px 0 12px">'+tabBtn("review","简历体检")+tabBtn("jd","岗位契合")+tabBtn("raw","原文")+'</div>';
+  var content;
+  var selectedJob=state.jdJobId?jobById(state.jdJobId):null;
+  var jobReady=!state.jdJobId||(selectedJob&&selectedJob.status==="开放"&&candidateAttachedToJob(selectedJob,d.id));
+  if(tab==="jd") content=renderJdInput(d)+'<div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-primary" id="jd_go" style="flex:1"'+((jobReady&&!pend("jd:"+d.id))?'':' disabled')+'>'+(pend("jd:"+d.id)?'<span class="spin"></span> 分析中…':S(IC.search,15)+' JD 差距分析')+'</button><button class="btn btn-ghost" id="eval_go" style="flex:1"'+((state.jdJobId&&jobReady&&!pend("eval:"+d.id))?'':' disabled')+'>'+(pend("eval:"+d.id)?loadLabel("eval:"+d.id,"评分中"):'岗位评分')+'</button><button class="btn btn-ghost" id="iq_go" style="flex:1"'+(pend("iq:"+d.id)?' disabled':'')+'>'+(pend("iq:"+d.id)?'<span class="spin"></span> 生成中…':'生成面试问题')+'</button></div><div id="jd_res" style="margin-top:10px">'+((pend("eval:"+d.id)||pend("jd:"+d.id))?'<div class="loadbub" style="margin:0 0 10px"><span class="spin"></span> 正在调用本地模型,请稍候(约 5–30 秒)…</div>':'')+gap+evaluation+'</div><div id="iq_res">'+((pend("iq:"+d.id))?'<div class="loadbub" style="margin:8px 0"><span class="spin"></span> 正在生成面试问题…</div>':'')+questions+'</div>';
+  else if(tab==="raw") content=rawHtml(d);
+  else content=reviewHtml(d);
+  return '<div class="card fw">'
+    +'<div class="top" style="margin-bottom:4px"><div class="title" style="font-size:16px">'+esc(d.name||"(未填)")+' <span class="tag">'+esc(d.status)+'</span></div><button class="btn btn-ghost" id="d_actions_btn" style="width:auto;padding:5px 12px">约面 · 动作 ▾</button></div>'
+    +'<div class="muted" style="font-size:12px">'+(digest||"—")+'</div>'
+    +actions+tabbar+content
+    +'</div>';
+}
+function compareHtml(){
+  var sel=state.compareSel||[];
+  var rows=(state.talentRows||[]).filter(function(d){return sel.indexOf(d.id)>=0;});
+  if(rows.length<2) return '<div class="empty-box" style="margin-top:0">勾选 2 名以上候选人 → 并排速览。</div>';
+  var card=function(d){
+    return '<div class="card fw" style="padding:14px"><div class="sectitle" style="margin-bottom:8px">'+esc(d.name||"(未填)")+' <span class="tag">'+esc(d.status||"")+'</span></div>'
+      +'<div class="kv"><span>年限</span><b>'+esc(d.years==null?"":d.years)+'</b></div>'
+      +'<div class="kv"><span>学历</span><b>'+esc(d.education||"")+'</b></div>'
+      +'<div class="kv"><span>技能</span><b>'+esc(d.skills||"")+'</b></div>'
+      +'<div class="kv"><span>期望薪资</span><b>'+esc(d.expected_salary||"")+'</b></div>'
+      +'</div>';
+  };
+  var jobs=(state.jobs||[]).filter(function(j){ return j.status==="开放" && rows.every(function(d){ return candidateAttachedToJob(j,d.id); }); });
+  var opts='<option value="">— 选择共同挂载的开放岗位 —</option>'+jobs.map(function(j){return '<option value="'+esc(j.id)+'"'+(state.matrixJobId===j.id?' selected':'')+'>'+esc(j.title||"未命名岗位")+'</option>';}).join("");
+  var matrixControls='<div class="card" style="margin-bottom:12px;padding:12px"><div class="sectitle" style="font-size:13px;margin-bottom:6px">岗位维度证据矩阵</div><div class="r"><label>岗位</label><select id="matrix_job">'+opts+'</select></div><button class="btn btn-primary" id="matrix_go" style="width:auto;padding:6px 14px"'+(state.matrixJobId?'':' disabled')+'>查看已有评分矩阵</button><div class="muted" style="font-size:11px;margin-top:6px">矩阵只读取已完成评分；若有人尚未评分，请先在候选人详情逐人运行，系统不会批量触发模型。</div></div>';
+  return '<div class="card fw"><div class="top" style="margin-bottom:8px"><div class="sectitle">并排速览 · '+rows.length+' 人</div><button class="btn btn-ghost" id="cmp_close" style="width:auto;padding:4px 12px">关闭</button></div>'
+    +matrixControls+evidenceMatrixHtml(rows)
+    +'<div class="muted" style="font-size:11px;margin:10px 0">并排速览不评分、不改变状态；评分与复核理由见上方矩阵。</div>'
+    +'<div class="grid2" style="gap:12px">'+rows.map(card).join("")+'</div></div>';
+}
+function evidenceMatrixHtml(rows){
+  var m=state.matrix;
+  if(!m) return '';
+  if(m.error) return '<div class="err" style="padding:8px 12px;border-radius:8px;margin-bottom:12px">'+esc(m.error)+'</div>';
+  var header='<tr><th style="text-align:left;padding:6px">评分维度</th>'+rows.map(function(d){var e=m.byCandidate[d.id]; var tent=e.coverage!=null&&e.coverage<100; return '<th style="padding:6px;text-align:left">'+esc(d.name||"未填")+'<br><span class="muted" style="font-size:10px">'+esc(e.queue)+' · '+(tent?'暂定 '+esc(e.direct_fit_score)+' · 覆盖 '+esc(e.coverage)+'%':esc(e.direct_fit_score)+'/100')+'</span></th>';}).join("")+'</tr>';
+  var body=m.dimensions.map(function(dim){
+    return '<tr><td style="padding:7px;border-top:1px solid var(--line)"><b>'+esc(dim.name)+'</b></td>'+rows.map(function(d){var x=(m.byCandidate[d.id].items||[]).filter(function(i){return i.dimension_id===dim.id;})[0]||{}; var ev=(x.evidence||[]).join("；"); var val=x.evidence_status==="needs_review"?'需复核':(x.evidence_coefficient!=null?'系数 '+x.evidence_coefficient:(x.evidence_level!=null?x.evidence_level+"/4":"—")); var cp=(x.checkpoint_status&&x.checkpoint_status!=="pending"&&x.checkpoint_status!=="not_applicable")?'<div class="muted" style="font-size:10px">考核:'+esc(x.checkpoint_status)+'</div>':''; return '<td style="padding:7px;border-top:1px solid var(--line);vertical-align:top"><span class="tag" style="font-size:10px">'+esc(x.evidence_status||"未评估")+'</span> <b style="font-size:11px">'+esc(val)+'</b>'+(x.transferable?'<div class="muted" style="font-size:10px;color:var(--tealD)">可迁移</div>':'')+cp+'<div class="muted" style="font-size:10px;margin-top:3px">'+esc(ev||x.note||"—")+'</div></td>';}).join("")+'</tr>';
+  }).join("");
+  return '<div style="overflow:auto;margin-bottom:12px"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead>'+header+'</thead><tbody>'+body+'</tbody></table></div>';
+}
+async function loadEvidenceMatrix(){
+  var jobId=state.matrixJobId, rows=(state.talentRows||[]).filter(function(d){return (state.compareSel||[]).indexOf(d.id)>=0;});
+  if(!jobId||rows.length<2) return;
+  try{
+    var pairs=await Promise.all(rows.map(async function(d){ return [d.id,await api("/api/jobs/"+jobId+"/candidates/"+d.id+"/evaluate")]; }));
+    if(pairs.some(function(p){return p[1].is_current===false;})){ state.matrix={error:"至少一名候选人的简历或评分规则版本已变更，历史评分不能进入当前矩阵。请先逐人重新评分。"}; paintTalent(); return; }
+    var byCandidate={}; pairs.forEach(function(p){byCandidate[p[0]]=p[1];});
+    var rubricIds={}; pairs.forEach(function(p){rubricIds[p[1].rubric_id]=true;});
+    if(Object.keys(rubricIds).length!==1){ state.matrix={error:"候选人评分使用了不同版本的规则，不能放在同一矩阵比较。请按同一冻结版本重新评分。"}; paintTalent(); return; }
+    var seen={}, dimensions=[]; pairs.forEach(function(p){(p[1].items||[]).forEach(function(i){if(!seen[i.dimension_id]){seen[i.dimension_id]=true;dimensions.push({id:i.dimension_id,name:i.name||"维度"});}});});
+    state.matrix={byCandidate:byCandidate,dimensions:dimensions}; paintTalent();
+  }catch(e){ state.matrix={error:"无法生成矩阵：请确认所有候选人已挂到该岗位并完成评分（"+e.message+"）"}; paintTalent(); }
+}
+function confirmCardHtml(cf){
+  var f=cf.fields||{};
+  var fld=function(id,label,val,hi){
+    return '<div class="r"><label>'+label+(hi?' <span style="color:#A23B3B">· 请对照原文重点核对</span>':'')+'</label>'
+      +'<input id="'+id+'" value="'+esc(val==null?"":val)+'"'+(hi?' style="border-color:#E9A23B;background:#FFF9EF"':'')+'></div>';
+  };
+  var warn = cf.needs_review ? '<div class="warn" style="padding:8px 12px;border-radius:8px;margin-bottom:10px">扫描件 OCR 低置信,数字与联系方式尤其请对照原文核对。</div>' : '';
+  return '<div><div class="sectitle" style="margin-bottom:12px">核对与确认</div><div class="grid2" style="gap:12px">'
+    +'<div class="card fw">'+warn
+      +fld("tf_name","姓名",f.name,false)+fld("tf_phone","电话",f.phone,true)+fld("tf_email","邮箱",f.email,true)
+      +fld("tf_edu","学历",f.education,false)+fld("tf_years","相关年限",f.years,false)
+      +fld("tf_skills","技能",f.skills,false)+fld("tf_salary","期望薪资",f.expected_salary,false)
+      +'<div class="r"><label>关键经历</label><textarea id="tf_experience" rows="3" placeholder="与岗位相关的项目、职责或成果">'+esc(f.experience==null?"":f.experience)+'</textarea></div>'
+      +'<div id="tf_err" style="font-size:12px;color:#A23B3B;min-height:14px;margin:4px 0"></div>'
+      +'<button class="btn btn-primary" id="tf_go">确认入库(转「待筛」)</button></div>'
+    +'<div><label class="muted" style="font-size:12px;display:block;margin-bottom:6px">简历原文(对照)</label>'
+      +expandable("cfraw:"+(cf.id||""), cf.original_text||"(无原文)", 280)+'</div>'
+    +'</div></div>';
+}
+async function ingestResume(e){
+  var f=e.target.files[0]; if(!f) return;
+  state.talentBusy=true; state.talentMsg=""; paintTalent();
+  try{
+    var fd=new FormData(); fd.append("file",f);
+    var r=await api("/api/talent/ingest",{method:"POST",body:fd});
+    state.talentConfirm={id:r.id, fields:r.extracted||{}, original_text:r.original_text||"", needs_review:r.needs_review};
+    state.talentMsg="已抽取,请逐字段核对后确认。"; state.talentBusy=false; await loadTalent(); paintTalent();
+  }catch(er){ state.talentBusy=false; state.err="摄取失败:"+er.message; renderShell(); }
+}
+async function openCandidate(cid){
+  try{ var d=await api("/api/talent/"+cid); state.talentSelected=d; state.jdGap=null; state.evaluation=null; state.commDraft=null; state.interviewQs=null; state.review=null; state.detailTab="review"; state.detailActions=false; state.jdText=""; state.talentMsg=""; paintTalent(); }
+  catch(e){ state.err=e.message; renderShell(); }
+}
+// ===== Step 2.4 群发(纯前端;候选人内容过 esc I6;发信路径零 LLM)=====
+function sendFormHtml(){
+  var jobs=(state.jobs||[]).filter(function(j){return j.status==="开放";});
+  var opts=jobs.map(function(j){return '<option value="'+esc(j.id)+'">'+esc(j.title)+'</option>';}).join("");
+  var n=(state.compareSel||[]).length;
+  var fld=function(lbl,inner){ return '<div><div class="muted" style="font-size:12px;margin-bottom:4px">'+lbl+'</div>'+inner+'</div>'; };
+  return '<div class="card fw" style="padding:14px;margin-bottom:12px"><div class="top" style="margin-bottom:6px"><div class="sectitle">建群发批 · 已选 '+n+' 人(≤50)</div><button class="btn btn-ghost" id="sf_close" style="width:auto;padding:4px 12px">关闭</button></div>'
+    +'<div class="form" style="border:none;padding:0">'
+    +fld("类型",'<select id="sf_type" style="width:100%"><option value="约面">约面(状态须为「约面」)</option><option value="跟进">跟进(已面/评估)</option><option value="拒信">拒信(淘汰)</option></select>')
+    +fld("岗位",'<select id="sf_job" style="width:100%">'+(opts||'<option value="">(无开放岗位)</option>')+'</select>')
+    +fld("时间(约面用)",'<input id="sf_time" placeholder="如:7月18日(周五)14:00">')
+    +fld("地点",'<input id="sf_loc" placeholder="如:公司 3F 会议室 / 腾讯会议">')
+    +fld("备注(选填)",'<input id="sf_note" placeholder="机械拼入正文,不经 AI">')
+    +'</div>'
+    +'<button class="btn btn-primary" id="sf_go" style="width:auto;padding:8px 18px;margin-top:12px"'+(state.sendBusy?' disabled':'')+'>'+(state.sendBusy?'<span class="spin"></span> 逐人生成+机检中…':'生成并机检(不发送)')+'</button></div>';
+}
+function sendBatchHtml(){
+  var b=state.sendBatch; if(!b) return "";
+  var its=b.items||[];
+  var clean=its.filter(function(i){return i.status==="pending";});
+  var exc=its.filter(function(i){return i.status==="exception";});
+  var done=its.filter(function(i){return ["sent","exported","failed","skipped","sending"].indexOf(i.status)>=0;});
+  var head='<div class="top" style="margin-bottom:6px"><div class="sectitle">群发批 · '+esc(b.mail_type)+' · <span class="muted">'+esc(b.status)+'</span></div><button class="btn btn-ghost" id="sb_close" style="width:auto;padding:4px 12px">关闭</button></div>';
+  var cleanHtml=clean.length?'<div class="sectitle" style="font-size:13px;margin:12px 0 6px">已过机检 '+clean.length+' 封 <span class="tag">可抽查</span></div>'+clean.map(function(i){
+    return '<div class="card" style="padding:10px;margin-bottom:6px"><b>'+esc(i.to_name)+'</b> <span class="muted">'+esc(i.to_email)+'</span> · '+esc(i.subject)+expandable("mail:"+i.id, i.body, 90)+'</div>';
+  }).join(""):"";
+  var excHtml=exc.length?'<div class="sectitle" style="font-size:13px;margin:14px 0 6px;color:#A23B3B">例外 '+exc.length+' 封(未发,逐封处置)</div>'+exc.map(function(i){
+    return '<div class="card" style="padding:10px;margin-bottom:6px;border-color:#E7C3C3"><b>'+esc(i.to_name)+'</b><div style="font-size:12px;margin:4px 0;color:#A23B3B">'+esc(i.exception_reason||"")+'</div>'
+      +'<div class="muted" style="font-size:11px">骨架预览:</div>'+expandable("skel:"+i.id, i.body, 60)
+      +'<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">'
+      +'<button class="btn btn-ghost" data-rs="send_skeleton|'+esc(i.id)+'" style="width:auto;padding:4px 10px;font-size:12px">发纯模板</button>'
+      +'<button class="btn btn-ghost" data-rs="retry|'+esc(i.id)+'" style="width:auto;padding:4px 10px;font-size:12px">重试生成</button>'
+      +'<button class="btn btn-ghost" data-rs="skip|'+esc(i.id)+'" style="width:auto;padding:4px 10px;font-size:12px">跳过</button></div></div>';
+  }).join(""):"";
+  var doneHtml=done.length?'<div class="sectitle" style="font-size:13px;margin:14px 0 6px">结果</div>'+done.map(function(i){
+    var tag=i.status==="failed"?'<span class="tag" style="background:#FDECEC;color:#A23B3B">失败:'+esc(i.fail_reason||"")+'</span>':'<span class="tag">'+esc(i.status)+'</span>';
+    return '<div class="card" style="padding:8px 10px;margin-bottom:6px"><b>'+esc(i.to_name)+'</b> '+tag+provenanceToggle(i)+'</div>';
+  }).join(""):"";
+  var actions='';
+  if(b.status==="草稿"){
+    actions='<div style="margin-top:12px"><button class="btn btn-primary" id="sb_confirm" style="width:auto;padding:8px 18px">确认发送 '+clean.length+' 封(例外 '+exc.length+' 封不发)</button></div>';
+  }else{
+    if(its.some(function(i){return i.status==="failed";})) actions+='<div style="margin-top:12px"><button class="btn btn-ghost" id="sb_retry" style="width:auto;padding:6px 14px">只重试失败的</button></div>';
+    if(b.status==="已确认") actions+='<div style="margin-top:12px"><button class="btn btn-primary" id="sb_export" style="width:auto;padding:8px 18px">导出 CSV(SMTP 未配置)</button><div class="muted" style="font-size:11px;margin-top:4px">含 PII,请勿外传;导出即计为已联系</div></div>';
+  }
+  return '<div class="card fw" style="padding:14px;margin-bottom:12px">'+head+cleanHtml+excHtml+doneHtml+actions+'</div>';
+}
+function provRow(label, value, hint){
+  return '<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:12px"><span class="muted">'+esc(label)+'</span><span style="text-align:right">'+value+'</span></div>'
+    +'<div class="muted" style="font-size:11px;line-height:1.5;margin-top:1px">'+esc(hint)+'</div></div>';
+}
+function provSection(key, num, title, inner){
+  var open=!!state.expanded[key];
+  return '<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:6px"><button class="btn btn-ghost" data-extoggle="'+esc(key)+'" style="width:100%;display:flex;align-items:center;justify-content:space-between;border:none;background:none;padding:2px;color:var(--slate);font-size:11px;letter-spacing:.05em"><span>'+num+' '+title+'</span><span>'+(open?"▾":"▸")+'</span></button>'
+    +(open?'<div style="font-size:12px;line-height:1.6;padding:6px 2px 2px">'+inner+'</div>':'')+'</div>';
+}
+function provenanceToggle(i){
+  var open=!!state.expanded["prov:"+i.id];
+  var btn=' <button class="btn btn-ghost" data-extoggle="prov:'+esc(i.id)+'" style="width:auto;padding:2px 10px;font-size:11px">'+(open?"收起溯源":"溯源卡")+'</button>';
+  if(!open) return btn;
+  var chk={}; try{ chk=JSON.parse(i.machine_checks||"{}"); }catch(e){}
+  var okN=Object.keys(chk).filter(function(k){return chk[k];}).length, chkN=Object.keys(chk).length||7;
+  var srcTxt=i.material_source? "评分维度 · "+esc(i.material_source) : "(纯骨架,无素材)";
+  var wordTxt={rule:"规则选材:证据等级×权重最高",manual:"HR 手改",skeleton:"纯骨架"}[i.wording]||esc(i.wording||"—");
+  var head=i.status==="failed"?'<span class="tag" style="background:#FDECEC;color:#A23B3B">失败</span>':'<span class="tag">'+esc(i.status)+'</span>';
+  return btn+'<div class="card" style="margin-top:8px;padding:12px;font-size:12px">'
+    +'<div style="display:flex;justify-content:space-between;margin-bottom:2px"><b>溯源卡 · '+esc(i.to_name)+'</b>'+head+'</div>'
+    +provSection("prov:"+i.id+":1","①","这封信",
+        provRow("收件人", esc(i.to_name)+" 〈"+esc(i.to_email)+"〉 <span class='tag'>代码绑定</span>", "姓名与邮箱由系统从候选人档案机械填充,AI 无权改动——从结构上杜绝错发")
+        +provRow("发送", esc(i.sent_at?new Date(i.sent_at*1000).toLocaleString():"未发出"), "随批次经 HR 一次确认后发出;建批/确认/发送均已落审计表")
+        +(i.status==="failed"?provRow("失败原因", esc(i.fail_reason||""), "SMTP 返回的原始错误;可在批报告用「只重试失败的」重发"):""))
+    +provSection("prov:"+i.id+":2","②","个性化句 · 规则选材",
+        provRow("素材", esc(i.material_value||"(无)")+(i.material_value?' <span class="tag">白名单内</span>':""), "只能从该候选人已被 HR 确认过的评分维度里选,清单外一律拦下")
+        +provRow("素材来源", srcTxt, "冻结评分规则的维度名(HR 权威、JD 蒸馏);候选人简历原文字节永不进邮件")
+        +provRow("选材依据", wordTxt, "一行确定性规则:证据等级×权重最高的一条,无模型参与、每次结果相同"))
+    +provSection("prov:"+i.id+":3","③","机检与模板",
+        provRow("机检", okN+"/"+chkN+" 通过", "收件人绑定/状态门/邮箱/防重/素材白名单/受保护属性/决策词——全部确定性代码检查")
+        +provRow("模板", esc(i.template_version||""), "骨架文字与称呼/岗位/时间/地点槽位均为代码填充;模板改动需重新人工审定"))
+    +'<div class="muted" style="font-size:11px;border-top:1px solid var(--line);padding-top:8px;margin-top:8px">本信全文零 AI 生成;个性化字段由上游评分管线制造,问答入口按 I1 恒不可查候选人数据</div></div>';
+}
+async function createSendBatch(){
+  var ids=(state.compareSel||[]).slice(); if(!ids.length){ state.err="请先勾选候选人"; renderShell(); return; }
+  state.sendBusy=true; paintTalent();
+  try{
+    var b=await api("/api/send-batches",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({mail_type:document.getElementById("sf_type").value, job_id:document.getElementById("sf_job").value,
+        candidate_ids:ids, interview_time:document.getElementById("sf_time").value,
+        location:document.getElementById("sf_loc").value, note:document.getElementById("sf_note").value})});
+    state.sendBusy=false; state.sendForm=false; state.sendBatch=b; state.compareSel=[]; paintTalent();
+  }catch(e){ state.sendBusy=false; state.err="建批失败:"+e.message; renderShell(); }
+}
+function confirmSendBatch(){
+  var b=state.sendBatch; if(!b) return;
+  var n=(b.items||[]).filter(function(i){return i.status==="pending";}).length;
+  confirmDanger("确认发送 "+n+" 封?邮件发出后无法撤回。", async function(){
+    try{ var r=await api("/api/send-batches/"+b.id+"/confirm",{method:"POST"}); state.sendBatch=r.batch||r; paintTalent(); }
+    catch(e){ state.err="发送失败:"+e.message; renderShell(); }
+  });
+}
+async function resolveSendItem(action, iid){
+  try{ await api("/api/send-items/"+iid+"/resolve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:action})});
+    var r=await api("/api/send-batches/"+state.sendBatch.id); state.sendBatch=r; paintTalent();
+  }catch(e){ state.err="处置失败:"+e.message; renderShell(); }
+}
+async function exportSendCsv(id){
+  try{
+    var r=await fetch("/api/send-batches/"+id+"/export.csv",{headers:token?{Authorization:"Bearer "+token}:{}});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    var blob=await r.blob(), url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download="batch-"+String(id).slice(0,8)+".csv"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    var b=await api("/api/send-batches/"+id); state.sendBatch=b; paintTalent();
+  }catch(e){ state.err="导出失败:"+e.message; renderShell(); }
+}
+function toggleCompareSel(cid){
+  if(!state.compareSel) state.compareSel=[];
+  var i=state.compareSel.indexOf(cid);
+  if(i>=0) state.compareSel.splice(i,1); else state.compareSel.push(cid);
+  state.matrix=null;
+  if(state.compareSel.length<2) state.showCompare=false;
+  paintTalent();
+}
+async function openConfirm(cid){
+  try{ var d=await api("/api/talent/"+cid);
+    state.talentConfirm={id:d.id, fields:{name:d.name,phone:d.phone,email:d.email,education:d.education,years:d.years,skills:d.skills,expected_salary:d.expected_salary,experience:d.experience}, original_text:d.original_text||"", needs_review:false};
+    state.talentMsg=""; paintTalent();
+  }catch(e){ state.err=e.message; renderShell(); }
+}
+async function submitConfirm(cid){
+  var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():""; };
+  var email=v("tf_email"), phone=v("tf_phone"), years=v("tf_years"), errEl=document.getElementById("tf_err");
+  if(email && !TF_EMAIL.test(email)){ errEl.textContent="邮箱格式不合法,请核对原文修正。"; return; }
+  if(phone && !TF_PHONE.test(phone)){ errEl.textContent="电话格式不合法,请核对原文修正。"; return; }
+  if(years && (!/^\d+(\.\d+)?$/.test(years) || Number(years)<0)){ errEl.textContent="相关年限应为不小于 0 的数字。"; return; }
+  var body={name:v("tf_name"), phone:phone, email:email, education:v("tf_edu"), years:years?Number(years):null,
+            skills:v("tf_skills"), expected_salary:v("tf_salary"), experience:v("tf_experience")};
+  var go=document.getElementById("tf_go"); if(go){ go.disabled=true; go.textContent="确认中…"; }
+  try{ await api("/api/talent/"+cid+"/confirm",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    state.talentMsg="已确认入库,状态转「待筛」。"; await loadTalent();
+    var q=state.reviewQ;
+    if(q && q.i+1 < q.list.length){ q.i++; await openConfirm(q.list[q.i]); return; }  // 逐份快速过:自动跳下一份
+    state.reviewQ=null; state.talentConfirm=null; paintTalent();
+  }catch(e){ if(go){ go.disabled=false; go.textContent="确认入库(转「待筛」)"; } if(errEl) errEl.textContent="确认失败:"+e.message; }
+}
+async function updateTalentStatus(cid,status){
+  var reason=window.prompt("请填写状态变更理由"); if(!reason||!reason.trim()) return;
+  try{ await api("/api/talent/"+cid+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:status,reason:reason.trim()})});
+    await loadTalent(); await openCandidate(cid);
+  }catch(e){ state.err="状态更新失败:"+e.message; renderShell(); }
+}
+async function rowUpdateStatus(cid,status){
+  var reason=window.prompt("请填写状态变更理由"); if(!reason||!reason.trim()) return;
+  try{ await api("/api/talent/"+cid+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:status,reason:reason.trim()})});
+    await loadTalent(); paintTalent();
+  }catch(e){ state.err="状态更新失败:"+e.message; renderShell(); }
+}
+function toggleDraftSel(cid){
+  if(!state.draftSel) state.draftSel=[];
+  var i=state.draftSel.indexOf(cid);
+  if(i>=0) state.draftSel.splice(i,1); else state.draftSel.push(cid);
+  paintTalent();
+}
+function batchReject(){
+  var ids=(state.draftSel||[]).slice(); if(!ids.length) return;
+  confirmDanger("退回(删除)选中的 "+ids.length+" 份草稿?此操作不可撤销。", async function(){
+    try{
+      for(var i=0;i<ids.length;i++){ await api("/api/talent/"+ids[i],{method:"DELETE"}); }
+      state.draftSel=[]; state.talentMsg="已退回 "+ids.length+" 份草稿。"; await loadTalent(); paintTalent();
+    }catch(e){ state.err="退回失败:"+e.message; renderShell(); }
+  });
+}
+function startReview(){
+  var ids=(state.draftSel||[]).slice(); if(!ids.length) return;
+  state.reviewQ={list:ids, i:0}; state.draftSel=[];
+  openConfirm(ids[0]);
+}
+async function createJob(){
+  var title=(document.getElementById("job_title").value||"").trim();
+  var jd=(document.getElementById("job_jd").value||"").trim();
+  if(!title){ state.jobMsg="请先填岗位名称"; paintTalent(); return; }
+  state.jobBusy=true; state.jobMsg=""; paintTalent();
+  try{ await api("/api/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:title,jd_text:jd})});
+    state.jobBusy=false; state.jobMsg="已建岗位:"+title; await loadTalent(); paintTalent();
+  }catch(e){ state.jobBusy=false; state.err="建岗位失败:"+e.message; renderShell(); }
+}
+function deleteJob(id){
+  confirmDanger("删除该岗位?挂载关系一并清除(不影响候选人本身)。", async function(){
+    try{ await api("/api/jobs/"+id,{method:"DELETE"}); if(state.jdJobId===id) state.jdJobId=""; await loadTalent(); paintTalent(); }
+    catch(e){ state.err="删岗位失败:"+e.message; renderShell(); }
+  });
+}
+async function updateJobStatus(id,status){
+  try{ await api("/api/jobs/"+id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:status})}); await loadTalent(); paintTalent(); }
+  catch(e){ state.err="改岗位状态失败:"+e.message; renderShell(); }
+}
+async function attachCandidateToJob(jobId,cid){
+  if(!jobId) return;
+  try{ await api("/api/jobs/"+jobId+"/candidates",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({candidate_id:cid})}); await loadTalent(); paintTalent(); }
+  catch(e){ state.err="挂到岗位失败:"+e.message; renderShell(); }
+}
+async function detachCandidateFromJob(jobId,cid){
+  if(!jobId) return;
+  try{ await api("/api/jobs/"+jobId+"/candidates/"+cid,{method:"DELETE"}); await loadTalent(); paintTalent(); }
+  catch(e){ state.err="从岗位移除失败:"+e.message; renderShell(); }
+}
+async function runJdGap(cid){
+  var jobId=state.jdJobId||"";
+  var jd = jobId ? "" : ((document.getElementById("jd_text")||{}).value||"").trim();
+  if(!jobId && !jd) return;   // 双入口:选岗位走 job_id、否则临时粘贴走 jd
+  try{ var r=await api("/api/talent/"+cid+"/jd-gap",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(jobId?{job_id:jobId}:{jd:jd})});
+    state.jdGap={id:cid, items:r.items||[], filtered:r.filtered||0, filtered_reasons:r.filtered_reasons||[], jd_flags:r.jd_flags||[]}; paintTalent();
+  }catch(e){ var box=document.getElementById("jd_res"); if(box) box.innerHTML='<div class="err" style="padding:8px 12px;border-radius:8px">'+esc(e.message)+'</div>'; }
+}
+async function runCandidateEvaluation(cid){
+  var jobId=state.jdJobId||""; if(!jobId) return;
+  try{ var r=await api("/api/jobs/"+jobId+"/candidates/"+cid+"/evaluate",{method:"POST"}); r.candidate_id=cid; state.evaluation=r; paintTalent(); }
+  catch(e){ var box=document.getElementById("jd_res"); if(box) box.innerHTML='<div class="err" style="padding:8px 12px;border-radius:8px">评分失败:'+esc(e.message)+'</div>'; }
+}
+async function runReview(cid){
+  var btn=document.getElementById("rv_go"); if(btn){ btn.disabled=true; btn.textContent="体检中…"; }
+  try{ var r=await api("/api/talent/"+cid+"/review",{method:"POST",headers:{"Content-Type":"application/json"}});
+    r.id=cid; state.review=r; paintTalent();
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent="运行简历体检"; } state.err="体检失败:"+e.message; renderShell(); }
+}
+async function runMessageDraft(cid,kind){
+  var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():""; };
+  try{
+    var r=await api("/api/talent/"+cid+"/message-draft",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:kind,job_title:v("msg_job"),interview_time:v("msg_time"),location:v("msg_loc")})});
+    r.id=cid; state.commDraft=r; paintTalent();
+  }catch(e){ var box=document.getElementById("msg_res"); if(box) box.innerHTML='<div class="err" style="padding:8px 12px;border-radius:8px">'+esc(e.message)+'</div>'; }
+}
+async function runInterviewQuestions(cid){
+  var jd = state.jdJobId ? ((jobById(state.jdJobId)||{}).jd_text||"") : ((document.getElementById("jd_text")||{}).value||"").trim();
+  try{
+    var r=await api("/api/talent/"+cid+"/interview-questions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jd:jd,gap_items:(state.jdGap&&state.jdGap.id===cid)?state.jdGap.items:[]})});
+    state.interviewQs={id:cid,questions:r.questions||[]}; paintTalent();
+  }catch(e){ var box=document.getElementById("iq_res"); if(box) box.innerHTML='<div class="err" style="padding:8px 12px;border-radius:8px">'+esc(e.message)+'</div>'; }
+}
+
+/* ---------- 检索 ---------- */
+function renderSearch(c){
+  c.className="content"; c.style.overflow="auto"; c.innerHTML='<div class="pad"><div class="searchbar"><input id="sQ" placeholder="输入关键词,如「报销」「年假」「备份」" /><button class="btn btn-primary" id="sBtn" style="padding:10px 20px">'+S(IC.search,15)+' 搜索</button></div><div id="sRes"></div></div>';
+  var inp=document.getElementById("sQ"); if(state.search) inp.value=state.search.term;
+  inp.onkeydown=function(e){ if(e.key==="Enter") runSearch(); };
+  document.getElementById("sBtn").onclick=runSearch;
+  renderSearchResults();
+}
+function renderSearchResults(){
+  var box=document.getElementById("sRes"); if(!box) return;
+  if(!state.search){ box.innerHTML=""; return; }
+  var term=state.search.term, hits=state.search.hits;
+  var list = hits.length ? hits.map(function(c){
+    var t=c.text, idx=t.toLowerCase().indexOf(term.toLowerCase());
+    var inner = idx<0 ? esc(t) : esc(t.slice(0,idx))+'<mark>'+esc(t.slice(idx,idx+term.length))+'</mark>'+esc(t.slice(idx+term.length));
+    return '<div class="hit"><div class="h"><span style="color:var(--teal)">'+S(IC.book,13)+'</span> 《'+esc(c.doc_title)+'》 <span class="tag">'+esc(c.dept)+'</span></div><div style="font-size:14px;line-height:1.6">'+inner+'</div></div>';
+  }).join("") : '<div class="empty-box">没有命中,换个关键词试试。</div>';
+  box.innerHTML='<div style="font-size:12px;color:var(--slate);margin-bottom:12px">「'+esc(term)+'」共命中 '+hits.length+' 段</div>'+list;
+}
+async function runSearch(){
+  var term=document.getElementById("sQ").value.trim(); if(!term){ state.search=null; renderSearchResults(); return; }
+  try{ var r=await api("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({q:term})}); state.search={term:term,hits:r.hits}; renderSearchResults(); }
+  catch(e){ state.err="检索失败:"+e.message; renderShell(); }
+}
+
+/* ---------- 用户管理 ---------- */
+async function renderUsers(c){
+  c.className="content"; c.innerHTML='<div class="pad"><div class="muted">加载中…</div></div>';
+  try{ state.users=await api("/api/users"); }catch(e){ c.innerHTML='<div class="pad"><div class="err">'+esc(e.message)+'</div></div>'; return; }
+  var u=state.users, full=u.used>=u.seats;
+  var rows=u.users.map(function(x){
+    var del = x.username===state.user.username ? '<span style="color:var(--slate);font-size:12px">当前账号</span>' : '<button class="iconbtn" data-deluser="'+esc(x.username)+'">'+S(IC.trash,14)+'</button>';
+    return '<tr><td>'+esc(x.username)+'</td><td><span class="tag">'+esc(u.role_names[x.role]||x.role)+'</span></td><td style="text-align:right">'+del+'</td></tr>';
+  }).join("");
+  var roleOpts=Object.keys(u.role_names).map(function(k){ return '<option value="'+k+'">'+esc(u.role_names[k])+'</option>'; }).join("");
+  c.innerHTML='<div class="pad"><div class="grid2">'
+    +'<div><div class="sectitle" style="margin-bottom:12px">账号(席位 '+u.used+' / '+u.seats+')</div>'
+    +'<table class="ut"><thead><tr><th>用户名</th><th>角色</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +'<div><div class="sectitle" style="margin-bottom:12px">新增账号</div><div class="form">'
+    +(full?'<div style="font-size:12px;color:#A23B3B">已达授权席位上限('+u.seats+'),需升级授权才能新增。</div>':'')
+    +'<input id="nu" placeholder="用户名" /><input id="np" type="password" placeholder="密码" />'
+    +'<select id="nr">'+roleOpts+'</select>'
+    +'<button class="btn btn-primary" id="nadd"'+(full?' disabled':'')+'>'+S(IC.plus,15)+' 创建账号</button>'
+    +'<div style="font-size:11px;color:var(--slate)">不同角色可见的知识范围不同(企业版按部门隔离)。</div>'
+    +'</div></div>'
+    +'</div></div>';
+  c.querySelectorAll("[data-deluser]").forEach(function(b){ b.onclick=function(){ delUser(b.getAttribute("data-deluser")); }; });
+  var addBtn=document.getElementById("nadd"); if(addBtn) addBtn.onclick=addUser;
+}
+async function addUser(){
+  var un=document.getElementById("nu").value.trim(), pw=document.getElementById("np").value, ro=document.getElementById("nr").value;
+  if(!un||!pw){ state.err="用户名和密码不能为空"; renderShell(); return; }
+  try{ await api("/api/users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:un,password:pw,role:ro})}); state.err=""; var m=await api("/api/me"); state.license=m.license; renderShell(); }
+  catch(e){ state.err="创建失败:"+e.message; renderShell(); }
+}
+async function delUser(un){
+  try{ await api("/api/users/"+encodeURIComponent(un),{method:"DELETE"}); var m=await api("/api/me"); state.license=m.license; renderShell(); }
+  catch(e){ state.err=e.message; renderShell(); }
+}
+
+/* ---------- 数据分析 ---------- */
+async function renderAnalytics(c){
+  c.className="content"; c.innerHTML='<div class="pad"><div class="muted">加载中…</div></div>';
+  try{ state.analytics=await api("/api/analytics"); }catch(e){ c.innerHTML='<div class="pad"><div class="err">'+esc(e.message)+'</div></div>'; return; }
+  var a=state.analytics;
+  var cards=[["总提问数",a.total,IC.chat],["拒答率",(a.refused_rate*100).toFixed(1)+"%",IC.shield],["👍 赞",a.up,IC.spark],["👎 踩",a.down,IC.spark]];
+  var max=Math.max(1,Math.max.apply(null,a.by_day.map(function(d){return d.count;})));
+  var bars=a.by_day.map(function(d){ return '<div class="bar-col"><div class="bar" style="height:'+(d.count/max*100)+'%" title="'+d.date+': '+d.count+'"></div><div class="bar-x">'+d.date.slice(5)+'</div></div>'; }).join("");
+  var recent = a.recent.length ? a.recent.map(function(r){
+    return '<tr><td>'+esc(r.question_preview||"已隐藏")+'</td><td><span class="tag">'+esc(state.roleNames[r.role]||r.role)+'</span></td><td>'+(r.refused?'<span class="tag red">拒答</span>':(r.rating===1?'👍':(r.rating===-1?'👎':'—')))+'</td></tr>';
+  }).join("") : '<tr><td colspan="3" style="color:var(--slate)">暂无问答记录</td></tr>';
+  c.innerHTML='<div class="pad">'
+    +'<div class="grid4">'+cards.map(function(s){ return '<div class="card stat"><div class="l">'+S(s[2],14)+' '+s[0]+'</div><div class="v" style="font-size:26px">'+esc(s[1])+'</div></div>'; }).join("")+'</div>'
+    +'<div class="card" style="margin-bottom:20px"><div class="sectitle" style="margin-bottom:6px">近 14 天提问量</div><div class="barchart">'+bars+'</div></div>'
+    +'<div class="sectitle" style="margin-bottom:12px">最近问答</div><table class="ut"><thead><tr><th>问题预览</th><th>提问角色</th><th>结果</th></tr></thead><tbody>'+recent+'</tbody></table>'
+    +'</div>';
+}
+
+boot();
+</script>
+</body>
+</html>
